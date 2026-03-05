@@ -18,25 +18,26 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://agenthotkeys.com"),
+  metadataBase: new URL("https://hotkeys.ai"),
   title: {
-    default: "Agentic Command Keys — Logan Golema | AlphaTON Capital",
-    template: "%s | Agentic Command Keys",
+    default: "HotKeys.ai — 13 Command Keys That Make AI Ship Real Code",
+    template: "%s | HotKeys.ai",
   },
   description:
-    "13 hotkeys that turn AI into a real engineer. From the CTO of AlphaTON Capital. Stop watching AI pretend. Start commanding it.",
+    "13 keyboard shortcuts that enforce real engineering discipline on AI agents. No stubs. No placeholders. No theater. From the CTO of AlphaTON Capital.",
   openGraph: {
-    title: "Agentic Command Keys",
+    title: "HotKeys.ai — Stop Watching AI Pretend to Code",
     description:
-      "13 hotkeys that turn AI into a real engineer. From the CTO of AlphaTON Capital.",
-    url: "https://agenthotkeys.com",
-    siteName: "Agentic Command Keys",
+      "13 command keys that force AI agents to write production-grade code. Built by a CTO who got tired of AI theater.",
+    url: "https://hotkeys.ai",
+    siteName: "HotKeys.ai",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Agentic Command Keys",
-    description: "13 hotkeys that turn AI into a real engineer.",
+    title: "HotKeys.ai — Stop Watching AI Pretend to Code",
+    description:
+      "13 command keys that force AI agents to write production-grade code. No stubs. No mocks. No theater.",
   },
   robots: { index: true, follow: true },
 };

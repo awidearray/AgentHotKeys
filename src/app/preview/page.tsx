@@ -1,48 +1,81 @@
 import type { Metadata } from "next";
-import { commands } from "@/data/commands";
-import Card from "@/components/ui/Card";
 import Button from "@/components/ui/Button";
 import SectionHeader from "@/components/ui/SectionHeader";
 import FadeUp from "@/components/ui/FadeUp";
 
 export const metadata: Metadata = {
-  title: "Free Preview — 3 Command Keys",
+  title: "Preview — Agentic Command Keys",
   description:
-    "Try 3 of the 13 Agentic Command Keys for free. See how they enforce real engineering discipline on AI agents.",
+    "See how 13 command keys enforce real engineering discipline on AI agents. Stop the stubs, the mocks, and the theater.",
 };
 
-const previewKeys = [
-  commands.find((c) => c.key === "C-1")!,
-  commands.find((c) => c.key === "C-6")!,
-  commands.find((c) => c.key === "C-4")!,
+const teasers = [
+  {
+    label: "Before",
+    text: "AI writes a test file with describe blocks, it blocks, and assertions that check... nothing. Green checkmarks everywhere. Zero real coverage.",
+    dim: true,
+  },
+  {
+    label: "After",
+    text: "One command key forces boundary conditions, error paths, async behavior, and integration points. Tests that fail when code breaks.",
+    dim: false,
+  },
+  {
+    label: "Before",
+    text: 'AI delivers a "complete" feature with // TODO: implement scattered through the service layer. Looks finished in the PR. Breaks in production.',
+    dim: true,
+  },
+  {
+    label: "After",
+    text: "One command key catches every stub, every placeholder, every swallowed error. Nothing ships until it's real.",
+    dim: false,
+  },
+  {
+    label: "Before",
+    text: "AI commits 47 files with the message \"update code\". No one knows what changed or why. Git blame is useless.",
+    dim: true,
+  },
+  {
+    label: "After",
+    text: "One command key enforces atomic commits, accurate messages, and self-review before push. Every commit tells a story.",
+    dim: false,
+  },
 ];
 
 export default function PreviewPage() {
   return (
     <main className="pt-28 pb-24">
-      <div className="max-w-[1100px] mx-auto px-6 relative z-1">
+      <div className="max-w-[800px] mx-auto px-6 relative z-1">
         <SectionHeader
-          title="Free Preview"
-          subtitle="Try 3 of the 13 command keys. See what disciplined AI engineering looks like."
+          title="What Changes"
+          subtitle="The difference between AI that performs and AI that delivers."
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-16">
-          {previewKeys.map((cmd, i) => (
-            <FadeUp key={cmd.key} delay={i * 100}>
-              <Card>
-                <span className="font-mono inline-block bg-accent/10 border border-accent/30 text-accent px-3 py-1 rounded-md text-[13px] font-semibold mb-3">
-                  {cmd.key}
+        <div className="space-y-6 mb-20">
+          {teasers.map((t, i) => (
+            <FadeUp key={i} delay={i * 80}>
+              <div
+                className={`border-l-2 pl-6 md:pl-8 ${
+                  t.dim
+                    ? "border-border"
+                    : "border-accent"
+                }`}
+              >
+                <span
+                  className={`font-mono text-xs font-semibold tracking-wide uppercase block mb-2 ${
+                    t.dim ? "text-text-dim" : "text-accent"
+                  }`}
+                >
+                  {t.label}
                 </span>
-                <h3 className="text-lg font-bold mb-1.5 text-text-primary">
-                  {cmd.title}
-                </h3>
-                <div className="text-accent text-[13px] mb-3">
-                  {cmd.subtitle}
-                </div>
-                <p className="text-text-dim text-sm leading-relaxed">
-                  {cmd.description}
+                <p
+                  className={`text-base md:text-lg leading-relaxed ${
+                    t.dim ? "text-text-dim" : "text-text-primary font-medium"
+                  }`}
+                >
+                  {t.text}
                 </p>
-              </Card>
+              </div>
             </FadeUp>
           ))}
         </div>
@@ -50,10 +83,10 @@ export default function PreviewPage() {
         <FadeUp>
           <div className="text-center">
             <h2 className="text-3xl font-extrabold mb-4">
-              Want all 13 command keys?
+              13 keys. Every failure mode covered.
             </h2>
             <p className="text-text-dim text-lg mb-8 max-w-md mx-auto">
-              Get the complete system — 13 production-tested keys, workflow
+              The complete system — production-tested prompts, workflow
               templates, and setup guides for every major editor.
             </p>
             <Button variant="primary" href="/#pricing">

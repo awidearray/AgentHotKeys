@@ -1,7 +1,7 @@
 import Hero from "@/components/sections/Hero";
 import Story from "@/components/sections/Story";
 import SocialProof from "@/components/sections/SocialProof";
-import Commands from "@/components/sections/Commands";
+import PainQuestions from "@/components/sections/PainQuestions";
 import Pricing from "@/components/sections/Pricing";
 import Newsletter from "@/components/sections/Newsletter";
 import JsonLd from "@/components/seo/JsonLd";
@@ -12,7 +12,7 @@ export default function HomePage() {
       <Hero />
       <Story />
       <SocialProof />
-      <Commands />
+      <PainQuestions />
       <Pricing />
       <Newsletter />
       <JsonLd />

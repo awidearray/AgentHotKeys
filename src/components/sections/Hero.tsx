@@ -14,7 +14,9 @@ export default function Hero() {
         </Badge>
 
         <h1 className="text-4xl md:text-[clamp(48px,6vw,72px)] font-black leading-[1.05] mb-6 tracking-tight">
-          Stop Watching AI
+          Stop Watching
+          <br className="md:hidden" />{" "}
+          AI
           <br />
           <GradientText>Pretend to Code.</GradientText>
         </h1>
@@ -30,8 +32,8 @@ export default function Hero() {
             Get the Command Keys
             <span className="text-[13px] opacity-80">&mdash; $35</span>
           </Button>
-          <Button variant="secondary" href="#commands">
-            See What&apos;s Inside
+          <Button variant="secondary" href="#questions">
+            See If This Is You
           </Button>
         </div>
 

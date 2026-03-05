@@ -8,7 +8,7 @@ async function sendDownloadEmail(email: string, sessionId: string) {
     return;
   }
 
-  const siteUrl = process.env.SITE_URL || "https://agenthotkeys.com";
+  const siteUrl = process.env.SITE_URL || "https://hotkeys.ai";
   const downloadUrl = `${siteUrl}/success?session_id=${sessionId}`;
 
   try {
@@ -21,11 +21,11 @@ async function sendDownloadEmail(email: string, sessionId: string) {
       },
       body: JSON.stringify({
         sender: {
-          name: "Agentic Command Keys",
-          email: "logan@agenthotkeys.com",
+          name: "HotKeys.ai",
+          email: "logan@hotkeys.ai",
         },
         to: [{ email }],
-        subject: "Your Agentic Command Keys — Download Ready",
+        subject: "Your HotKeys — Download Ready",
         htmlContent: `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; color: #333;">
             <h1 style="font-size: 24px; margin-bottom: 16px;">You're in. Welcome to the team.</h1>

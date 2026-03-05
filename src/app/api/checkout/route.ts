@@ -8,7 +8,7 @@ export async function POST() {
   }
 
   const stripe = new Stripe(stripeSecretKey);
-  const origin = process.env.SITE_URL || "https://agenthotkeys.com";
+  const origin = process.env.SITE_URL || "https://hotkeys.ai";
 
   try {
     const session = await stripe.checkout.sessions.create({

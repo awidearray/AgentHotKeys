@@ -4,7 +4,7 @@ export default function JsonLd() {
     "@graph": [
       {
         "@type": "Product",
-        name: "Agentic Command Keys",
+        name: "HotKeys.ai — Agentic Command Keys",
         description:
           "13 keyboard shortcuts that enforce real engineering discipline on AI agents. A 17-page PDF guide.",
         offers: {
@@ -12,7 +12,7 @@ export default function JsonLd() {
           price: "35.00",
           priceCurrency: "USD",
           availability: "https://schema.org/InStock",
-          url: "https://agenthotkeys.com/#pricing",
+          url: "https://hotkeys.ai/#pricing",
         },
         brand: {
           "@type": "Organization",
@@ -31,10 +31,10 @@ export default function JsonLd() {
       },
       {
         "@type": "WebPage",
-        name: "Agentic Command Keys — Logan Golema | AlphaTON Capital",
+        name: "HotKeys.ai — 13 Command Keys That Make AI Ship Real Code",
         description:
-          "13 hotkeys that turn AI into a real engineer. From the CTO of AlphaTON Capital.",
-        url: "https://agenthotkeys.com",
+          "13 command keys that force AI agents to write production-grade code. From the CTO of AlphaTON Capital.",
+        url: "https://hotkeys.ai",
       },
     ],
   };
