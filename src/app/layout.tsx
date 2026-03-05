@@ -3,6 +3,9 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import GridBackground from "@/components/ui/GridBackground";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { AuthProvider } from "@/components/providers/AuthProvider";
+import { Web3Provider } from "@/components/providers/Web3Provider";
+import ErrorBoundary from "@/components/ui/ErrorBoundary";
 import "./globals.css";
 
 const inter = Inter({
@@ -73,11 +76,21 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body className="font-sans antialiased">
-        <GridBackground>
-          <Navbar />
-          {children}
-          <Footer />
-        </GridBackground>
+        <ErrorBoundary>
+          <AuthProvider>
+            <Web3Provider>
+              <ErrorBoundary>
+                <GridBackground>
+                  <Navbar />
+                  <ErrorBoundary>
+                    {children}
+                  </ErrorBoundary>
+                  <Footer />
+                </GridBackground>
+              </ErrorBoundary>
+            </Web3Provider>
+          </AuthProvider>
+        </ErrorBoundary>
       </body>
     </html>
   );
