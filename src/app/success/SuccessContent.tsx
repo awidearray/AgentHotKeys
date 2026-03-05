@@ -22,7 +22,7 @@ export default function SuccessContent({ sessionId }: { sessionId: string }) {
               Download Your PDF
             </a>
             <p className="text-text-dim text-[13px] mt-4">
-              A copy has also been sent to your email. Welcome to the team.
+              Welcome to the team.
             </p>
           </div>
         </div>

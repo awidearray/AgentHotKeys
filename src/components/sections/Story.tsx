@@ -21,8 +21,15 @@ export default function Story() {
             <div className="text-text-dim text-base leading-relaxed space-y-5">
               <p>
                 I&apos;m{" "}
-                <strong className="text-text-primary">Logan Golema</strong>, CTO
-                at{" "}
+                <a
+                  href="https://logangolema.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-text-primary font-bold hover:text-accent transition-colors"
+                >
+                  Logan Golema
+                </a>
+                , CTO at{" "}
                 <strong className="text-text-primary">AlphaTON Capital</strong>{" "}
                 &mdash; a publicly traded company where shipping broken code
                 isn&apos;t an option. The stakes are real. The deadlines are

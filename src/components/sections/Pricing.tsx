@@ -57,7 +57,7 @@ export default function Pricing() {
           </button>
 
           <p className="text-text-dim text-xs mt-4 relative z-1">
-            Secure payment via Stripe. PDF delivered instantly to your email.
+            Secure payment via Stripe. Instant PDF download after purchase.
           </p>
         </div>
       </div>

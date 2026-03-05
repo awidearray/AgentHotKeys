@@ -5,7 +5,7 @@ import { commandKeys } from "@/data/commands";
 
 export default function Hero() {
   return (
-    <section className="pt-40 pb-24 relative">
+    <section className="pt-28 md:pt-40 pb-16 md:pb-24 relative">
       <div className="radial-glow absolute top-20 left-1/2 -translate-x-1/2" />
 
       <div className="max-w-[1100px] mx-auto px-6 relative z-1">
@@ -13,7 +13,7 @@ export default function Hero() {
           From the CTO of a Publicly Traded Company
         </Badge>
 
-        <h1 className="text-[clamp(42px,6vw,72px)] font-black leading-[1.05] mb-6 tracking-tight">
+        <h1 className="text-4xl md:text-[clamp(48px,6vw,72px)] font-black leading-[1.05] mb-6 tracking-tight">
           Stop Watching AI
           <br />
           <GradientText>Pretend to Code.</GradientText>

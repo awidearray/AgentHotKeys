@@ -18,19 +18,22 @@ export default async function SuccessPage({
     redirect("/");
   }
 
-  // Server-side payment verification
+  // Server-side payment verification — always verify, no backdoors
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
-  if (stripeSecretKey && !stripeSecretKey.startsWith("sk_test_REPLACE")) {
-    const Stripe = (await import("stripe")).default;
-    const stripe = new Stripe(stripeSecretKey);
-    try {
-      const session = await stripe.checkout.sessions.retrieve(session_id);
-      if (session.payment_status !== "paid") {
-        redirect("/");
-      }
-    } catch {
+  if (!stripeSecretKey) {
+    // Stripe not configured — can't verify, redirect home
+    redirect("/");
+  }
+
+  const Stripe = (await import("stripe")).default;
+  const stripe = new Stripe(stripeSecretKey);
+  try {
+    const session = await stripe.checkout.sessions.retrieve(session_id);
+    if (session.payment_status !== "paid") {
       redirect("/");
     }
+  } catch {
+    redirect("/");
   }
 
   return <SuccessContent sessionId={session_id} />;
