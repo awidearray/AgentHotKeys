@@ -1,29 +1,9 @@
-"use client";
-
-import { useState } from "react";
 import SectionHeader from "@/components/ui/SectionHeader";
 import { pricingFeatures } from "@/data/commands";
 
+const STRIPE_LINK = "https://buy.stripe.com/00wcN51Qx0iV1aSeva57W01";
+
 export default function Pricing() {
-  const [loading, setLoading] = useState(false);
-
-  async function handlePurchase() {
-    setLoading(true);
-    try {
-      const res = await fetch("/api/checkout", { method: "POST" });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else {
-        console.error("Checkout error:", data.error);
-        setLoading(false);
-      }
-    } catch (err) {
-      console.error("Checkout error:", err);
-      setLoading(false);
-    }
-  }
-
   return (
     <section id="pricing" className="py-24">
       <div className="max-w-[1100px] mx-auto px-6 relative z-1">
@@ -63,13 +43,12 @@ export default function Pricing() {
             ))}
           </ul>
 
-          <button
-            onClick={handlePurchase}
-            disabled={loading}
-            className="relative z-1 w-full py-4.5 rounded-xl bg-accent text-bg font-extrabold text-lg border-none cursor-pointer transition-all duration-300 hover:bg-accent-bright hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,229,160,0.15)] disabled:opacity-60 disabled:cursor-wait"
+          <a
+            href={STRIPE_LINK}
+            className="relative z-1 block w-full py-4.5 rounded-xl bg-accent text-bg font-extrabold text-lg text-center no-underline transition-all duration-300 hover:bg-accent-bright hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,229,160,0.15)]"
           >
-            {loading ? "Redirecting to checkout..." : "Buy Now \u2014 $35"}
-          </button>
+            Buy Now — $35
+          </a>
 
           <p className="text-text-dim text-xs mt-4 relative z-1">
             Secure payment via Stripe. Instant PDF download after purchase.
