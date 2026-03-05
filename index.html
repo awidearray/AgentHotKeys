@@ -587,6 +587,36 @@ footer {
 </footer>
 
 <script>
+// ═══════════════════════════════════════════════════════════════════
+// STRIPE SETUP INSTRUCTIONS (follow these steps in your Stripe dashboard)
+// ═══════════════════════════════════════════════════════════════════
+//
+// 1. Go to https://dashboard.stripe.com/payment-links/create
+// 2. Click "Add new product" → Name: "Agentic Command Keys" → Price: $10 one-time
+// 3. Under "After payment" → select "Don't show confirmation page"
+//    → Set custom URL to: https://agenthotkeys.com?purchase=success
+// 4. Under "After payment" → enable "Send email receipt"
+//
+// TO DELIVER THE PDF AUTOMATICALLY AFTER PURCHASE:
+//    Option A (simplest): In Stripe Payment Link settings → "After payment"
+//      → Add a custom message with the download link:
+//        "Download your guide: https://agenthotkeys.com/Agentic_Command_Keys.pdf"
+//
+//    Option B (more polished): Use Stripe + Zapier/Make.com:
+//      - Trigger: Stripe → Payment completed
+//      - Action: Send email with PDF attached via SendGrid/Mailgun
+//
+//    Option C (most control): Stripe Webhooks
+//      - Set up a Cloudflare Worker or Vercel serverless function
+//      - Listen for checkout.session.completed events
+//      - Send PDF via email using Resend/SendGrid API
+//
+// 5. Copy your Payment Link URL and paste it below (replace YOUR_STRIPE_LINK):
+// ═══════════════════════════════════════════════════════════════════
+
+const STRIPE_PAYMENT_LINK = 'YOUR_STRIPE_LINK';
+// Example: const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/abc123xyz';
+
 // Intersection Observer for scroll animations
 const observer = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
@@ -604,21 +634,92 @@ document.querySelectorAll('.command-card, .proof-card, .timeline-item').forEach(
   observer.observe(el);
 });
 
-// Newsletter handler
+// ── PURCHASE SUCCESS HANDLER ──
+// When Stripe redirects back with ?purchase=success, show download
+(function handlePurchaseSuccess() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('purchase') === 'success') {
+    // Remove query param from URL without reload
+    window.history.replaceState({}, '', window.location.pathname);
+
+    // Create success overlay
+    const overlay = document.createElement('div');
+    overlay.innerHTML = `
+      <div style="position:fixed;inset:0;background:rgba(6,6,11,0.95);z-index:9999;
+        display:flex;align-items:center;justify-content:center;">
+        <div style="background:#0E0E16;border:2px solid #00E5A0;border-radius:20px;
+          padding:48px;max-width:500px;text-align:center;">
+          <div style="font-size:48px;margin-bottom:16px;">&#10003;</div>
+          <h2 style="color:#F0F0F5;font-size:28px;margin-bottom:12px;">You're In.</h2>
+          <p style="color:#8888A0;margin-bottom:32px;">
+            Your Agentic Command Keys guide is ready. Click below to download your PDF.
+          </p>
+          <a href="Agentic_Command_Keys.pdf" download
+            style="display:inline-block;background:#00E5A0;color:#06060B;padding:16px 36px;
+            border-radius:12px;font-weight:700;font-size:16px;text-decoration:none;
+            margin-bottom:16px;">
+            Download Your PDF
+          </a>
+          <p style="color:#8888A0;font-size:13px;margin-top:16px;">
+            A copy has also been sent to your email. Welcome to the team.
+          </p>
+          <button onclick="this.closest('div[style]').parentElement.remove()"
+            style="margin-top:20px;background:none;border:1px solid #1A1A28;color:#8888A0;
+            padding:8px 20px;border-radius:8px;cursor:pointer;font-size:13px;">
+            Close
+          </button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+  }
+})();
+
+// ── NEWSLETTER HANDLER ──
 function handleNewsletter(e) {
   e.preventDefault();
   const email = document.getElementById('emailInput').value;
-  // In production, this would POST to your email service
+
+  // ═══════════════════════════════════════════════════════
+  // NEWSLETTER SETUP: Replace the console.log below with
+  // your email provider's API call. Examples:
+  //
+  // ConvertKit:
+  //   fetch('https://api.convertkit.com/v3/forms/YOUR_FORM_ID/subscribe', {
+  //     method: 'POST',
+  //     headers: { 'Content-Type': 'application/json' },
+  //     body: JSON.stringify({ api_key: 'YOUR_API_KEY', email: email })
+  //   });
+  //
+  // Buttondown:
+  //   fetch('https://api.buttondown.email/v1/subscribers', {
+  //     method: 'POST',
+  //     headers: { 'Authorization': 'Token YOUR_TOKEN', 'Content-Type': 'application/json' },
+  //     body: JSON.stringify({ email: email })
+  //   });
+  //
+  // Mailchimp (via their marketing API):
+  //   Use a serverless function to proxy the request
+  // ═══════════════════════════════════════════════════════
+
   console.log('Newsletter signup:', email);
   document.getElementById('newsletterForm').style.display = 'none';
   document.getElementById('successMsg').style.display = 'block';
 }
 
-// Purchase handler
+// ── PURCHASE HANDLER ──
 function handlePurchase() {
-  // In production, this would redirect to Stripe Checkout
-  // e.g., window.location.href = 'https://buy.stripe.com/your-link';
-  alert('In production, this redirects to Stripe Checkout.\n\nTo set up:\n1. Create a Stripe account\n2. Create a Payment Link for $10\n3. Replace this alert with:\nwindow.location.href = "https://buy.stripe.com/your-link"');
+  if (STRIPE_PAYMENT_LINK === 'YOUR_STRIPE_LINK') {
+    alert(
+      'Stripe not configured yet!\n\n' +
+      'To set up:\n' +
+      '1. Go to dashboard.stripe.com/payment-links/create\n' +
+      '2. Create a $10 product called "Agentic Command Keys"\n' +
+      '3. Set redirect URL to: https://agenthotkeys.com?purchase=success\n' +
+      '4. Paste the Payment Link URL into the STRIPE_PAYMENT_LINK variable in index.html'
+    );
+    return;
+  }
+  window.location.href = STRIPE_PAYMENT_LINK;
 }
 </script>
 
