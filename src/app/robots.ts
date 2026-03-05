@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/api/", "/success"],
     },
-    sitemap: "https://agenthotkeys.com/sitemap.xml",
+    sitemap: "https://hotkeys.ai/sitemap.xml",
   };
 }

@@ -36,7 +36,7 @@ export const timelineItems = [
   },
   {
     year: "The System",
-    desc: "Built the Command Keys framework. 11 hotkeys that enforce real engineering on AI agents.",
+    desc: "Built the Command Keys framework. 13 hotkeys that enforce real engineering on AI agents.",
     active: false,
   },
   {

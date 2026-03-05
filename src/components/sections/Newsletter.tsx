@@ -49,7 +49,7 @@ export default function Newsletter() {
           </span>
 
           <h2 className="text-4xl font-extrabold mb-3">
-            The Agentic Developer
+            The HotKeys Newsletter
           </h2>
 
           <p className="text-text-dim mb-8 text-base">

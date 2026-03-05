@@ -20,26 +20,49 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL("https://hotkeys.ai"),
   title: {
-    default: "HotKeys.ai — 13 Command Keys That Make AI Ship Real Code",
+    default: "AI Coding Hotkeys — 13 Command Keys for AI Agents | HotKeys.ai",
     template: "%s | HotKeys.ai",
   },
   description:
-    "13 keyboard shortcuts that enforce real engineering discipline on AI agents. No stubs. No placeholders. No theater. From the CTO of AlphaTON Capital.",
+    "13 keyboard shortcuts that force AI agents to write production-grade code. No stubs, no placeholders, no theater. Works with Claude, Cursor, Copilot, and GPT. $35 one-time.",
+  keywords: [
+    "AI coding hotkeys",
+    "AI agent keyboard shortcuts",
+    "command keys for AI",
+    "AI coding discipline",
+    "stop AI from writing stubs",
+    "make AI write real code",
+    "cursor AI shortcuts",
+    "claude code command keys",
+    "AI coding prompts",
+    "AI engineering hotkeys",
+    "agentic development",
+    "AI code quality",
+  ],
+  alternates: {
+    canonical: "https://hotkeys.ai",
+  },
   openGraph: {
-    title: "HotKeys.ai — Stop Watching AI Pretend to Code",
+    title: "Your AI writes beautiful code that doesn't work. Fix it with 13 hotkeys.",
     description:
-      "13 command keys that force AI agents to write production-grade code. Built by a CTO who got tired of AI theater.",
+      "Keyboard shortcuts that enforce real engineering discipline on AI agents. Built by a CTO who got tired of AI theater. Works with Claude, Cursor, GPT, Copilot.",
     url: "https://hotkeys.ai",
     siteName: "HotKeys.ai",
     type: "website",
+    locale: "en_US",
   },
   twitter: {
     card: "summary_large_image",
-    title: "HotKeys.ai — Stop Watching AI Pretend to Code",
+    title: "Stop watching AI pretend to code.",
     description:
-      "13 command keys that force AI agents to write production-grade code. No stubs. No mocks. No theater.",
+      "13 hotkeys that force AI to ship real code. No stubs. No mocks. No theater. From a CTO who builds with AI every day.",
+    site: "@logangolema",
   },
   robots: { index: true, follow: true },
+  authors: [{ name: "Logan Golema", url: "https://logangolema.com" }],
+  creator: "Logan Golema",
+  publisher: "HotKeys.ai",
+  category: "Technology",
 };
 
 export default function RootLayout({

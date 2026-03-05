@@ -4,9 +4,9 @@ import SectionHeader from "@/components/ui/SectionHeader";
 import FadeUp from "@/components/ui/FadeUp";
 
 export const metadata: Metadata = {
-  title: "Preview — Agentic Command Keys",
+  title: "Preview — AI Coding Hotkeys That Stop Stubs and Fake Code",
   description:
-    "See how 13 command keys enforce real engineering discipline on AI agents. Stop the stubs, the mocks, and the theater.",
+    "See how 13 AI coding hotkeys enforce real engineering discipline. Before and after: what changes when AI stops pretending and starts shipping.",
 };
 
 const teasers = [

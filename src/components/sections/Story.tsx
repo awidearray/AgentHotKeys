@@ -50,10 +50,10 @@ export default function Story() {
                 <strong className="text-text-primary">theater</strong>.
               </p>
               <p>
-                So I built a system. 11 command keys that force AI agents to
+                So I built a system. 13 command keys that force AI agents to
                 behave like the senior engineers I&apos;d actually hire. No
                 shortcuts. No pretending. Every key targets a specific failure
-                mode I&apos;ve caught AI doing hundreds of times.
+                mode I&apos;ve caught AI doing thousands of times.
               </p>
               <p>
                 Now my team ships production code 10x faster &mdash; and it{" "}

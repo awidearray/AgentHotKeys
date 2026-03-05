@@ -8,7 +8,7 @@ export default function Pricing() {
     <section id="pricing" className="py-24">
       <div className="max-w-[1100px] mx-auto px-6 relative z-1">
         <SectionHeader
-          title="Get the Complete System"
+          title="Get the AI Coding Hotkeys"
           subtitle="Everything you need to command AI like a senior engineer."
         />
 
