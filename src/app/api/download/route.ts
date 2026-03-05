@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
   const { readFile } = await import("fs/promises");
   const { join } = await import("path");
   try {
-    const pdfPath = join(process.cwd(), "public", "Agentic_Command_Keys.pdf");
+    const pdfPath = join(process.cwd(), "private", "Agentic_Command_Keys.pdf");
     const pdf = await readFile(pdfPath);
     return new NextResponse(pdf, {
       headers: {

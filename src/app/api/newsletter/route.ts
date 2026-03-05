@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export async function POST(request: NextRequest) {
   let body: { email?: string };
   try {
@@ -10,14 +12,20 @@ export async function POST(request: NextRequest) {
 
   const { email } = body;
 
-  if (!email || !email.includes("@")) {
+  if (!email || !EMAIL_RE.test(email)) {
     return NextResponse.json({ error: "Invalid email" }, { status: 400 });
   }
 
   const brevoApiKey = process.env.BREVO_API_KEY;
 
   if (brevoApiKey && !brevoApiKey.startsWith("xkeysib-REPLACE")) {
-    // Add subscriber to Brevo contact list
+    const listIdRaw = process.env.BREVO_LIST_ID;
+    const listIds = listIdRaw ? [parseInt(listIdRaw, 10)] : [];
+
+    if (listIds.length === 0) {
+      console.warn("BREVO_LIST_ID not set — subscriber will be added to Brevo but no list");
+    }
+
     try {
       const res = await fetch("https://api.brevo.com/v3/contacts", {
         method: "POST",
@@ -29,8 +37,7 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           email,
           updateEnabled: true,
-          // Add to your newsletter list — set the list ID in Brevo dashboard
-          // listIds: [2],
+          ...(listIds.length > 0 && { listIds }),
         }),
       });
 
@@ -44,8 +51,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Failed to subscribe" }, { status: 500 });
     }
   } else {
-    // Fallback: log to console when Brevo not configured
-    console.log("Newsletter signup:", email);
+    console.log("Newsletter signup (Brevo not configured):", email);
   }
 
   return NextResponse.json({ success: true });

@@ -1,16 +1,14 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import Stripe from "stripe";
 
-export async function POST(request: NextRequest) {
+export async function POST() {
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
   if (!stripeSecretKey) {
     return NextResponse.json({ error: "Stripe not configured" }, { status: 500 });
   }
 
   const stripe = new Stripe(stripeSecretKey);
-
-  // Determine the base URL from the request
-  const origin = request.headers.get("origin") || "https://agenthotkeys.com";
+  const origin = process.env.SITE_URL || "https://agenthotkeys.com";
 
   try {
     const session = await stripe.checkout.sessions.create({
