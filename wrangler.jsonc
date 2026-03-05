@@ -17,7 +17,7 @@
   //   { "binding": "PDF_BUCKET", "bucket_name": "agenthotkeys-pdfs" }
   // ],
   "vars": {
-    "NEXT_PUBLIC_STRIPE_PAYMENT_LINK": "https://buy.stripe.com/7sYfZh8eV5Df5r80Ek57W00",
+    "NEXT_PUBLIC_STRIPE_PAYMENT_LINK": "https://buy.stripe.com/00wcN51Qx0iV1aSeva57W01",
     "SITE_URL": "https://agenthotkeys.com"
   }
   // Secrets (set via: wrangler secret put <NAME>):
