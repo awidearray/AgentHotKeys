@@ -9,6 +9,8 @@
 /.open-next/
 /.wrangler/
 .dev.vars
+.env.local
+.env*.local
 
 # misc
 .DS_Store
