@@ -1,7 +1,25 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getToken } from "next-auth/jwt";
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
+  
+  // Protected routes check
+  if (pathname.startsWith("/dashboard") || pathname.startsWith("/admin")) {
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+
+    if (!token) {
+      const signInUrl = new URL("/auth/signin", request.url);
+      signInUrl.searchParams.set("callbackUrl", request.url);
+      return NextResponse.redirect(signInUrl);
+    }
+
+    if (pathname.startsWith("/admin") && token.role !== "admin") {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    }
+  }
+  
   const response = NextResponse.next();
 
   // Security headers
