@@ -1,7 +1,7 @@
 import SectionHeader from "@/components/ui/SectionHeader";
 import { pricingFeatures } from "@/data/commands";
 
-const STRIPE_LINK = "https://buy.stripe.com/00wcN51Qx0iV1aSeva57W01";
+const STRIPE_LINK = process.env.NEXT_PUBLIC_STRIPE_PAYMENT_LINK || "https://buy.stripe.com/00wcN51Qx0iV1aSeva57W01";
 
 export default function Pricing() {
   return (
