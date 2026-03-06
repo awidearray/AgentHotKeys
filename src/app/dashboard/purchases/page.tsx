@@ -78,7 +78,18 @@ export default function PurchasesPage() {
         throw dbError;
       }
 
-      setPurchases(data || []);
+      const normalized = (data || []).map((row: any) => {
+        const hotkey = Array.isArray(row.hotkey) ? row.hotkey[0] : row.hotkey;
+        return {
+          ...row,
+          hotkey: {
+            ...hotkey,
+            creator: Array.isArray(hotkey?.creator) ? hotkey.creator[0] : hotkey?.creator,
+          },
+        };
+      });
+
+      setPurchases(normalized);
     } catch (err: any) {
       console.error('Failed to fetch purchases:', err);
       setError(err?.message || 'Failed to load purchases');
