@@ -168,7 +168,7 @@ class Monitoring {
   }
 
   // Health check alerts
-  checkDatabaseHealth(isHealthy: boolean, latency: number) {
+  checkDatabaseHealth(isHealthy: boolean, latency: number | null) {
     if (!isHealthy) {
       this.recordAlert({
         name: 'database_unhealthy',
@@ -178,7 +178,7 @@ class Monitoring {
       });
     }
 
-    if (latency > 5000) { // 5 seconds
+    if (typeof latency === 'number' && latency > 5000) { // 5 seconds
       this.recordAlert({
         name: 'database_slow',
         message: `Database response time is ${latency}ms`,
