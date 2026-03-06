@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fireBrevoEvent } from "@/lib/brevo";
+import { fireBrevoEvent, sendNewsletterConfirmationEmail } from "@/lib/brevo";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -65,9 +65,22 @@ export async function POST(request: NextRequest) {
   const listIdRaw = process.env.BREVO_LIST_ID;
   const listId = listIdRaw ? parseInt(listIdRaw, 10) : null;
 
+  const finalizeSuccess = async () => {
+    await fireBrevoEvent(email, "newsletter_signup");
+    const sent = await sendNewsletterConfirmationEmail(email);
+    if (sent) {
+      await fireBrevoEvent(email, "newsletter_confirmed");
+    }
+    return NextResponse.json({ success: true, confirmationSent: sent });
+  };
+
   if (!brevoApiKey || brevoApiKey.startsWith("xkeysib-REPLACE")) {
     console.log("Newsletter signup (Brevo not configured):", email);
-    return NextResponse.json({ success: true });
+    return NextResponse.json({
+      success: true,
+      confirmationSent: false,
+      message: "Brevo is not configured; confirmation email not sent.",
+    });
   }
 
   try {
@@ -88,18 +101,14 @@ export async function POST(request: NextRequest) {
       createResult = await createOrUpdateContact(brevoApiKey, email);
     }
 
-    if (createResult.ok) {
-      await fireBrevoEvent(email, "newsletter_signup");
-      return NextResponse.json({ success: true });
-    }
+    if (createResult.ok) return finalizeSuccess();
 
     // 2. 409 = contact already exists — add to list if we have one, else still success
     if (createResult.status === 409) {
       if (listId && listId > 0) {
         const addRes = await addContactToList(brevoApiKey, listId, email);
         if (addRes.ok) {
-          await fireBrevoEvent(email, "newsletter_signup");
-          return NextResponse.json({ success: true });
+          return finalizeSuccess();
         }
         console.error(
           "Brevo add-to-list failed after 409:",
@@ -107,12 +116,10 @@ export async function POST(request: NextRequest) {
           addRes.body
         );
         // Don't block signup UX on Brevo list issues.
-        await fireBrevoEvent(email, "newsletter_signup");
-        return NextResponse.json({ success: true });
+        return finalizeSuccess();
       } else {
         // Contact exists, no list — treat as success
-        await fireBrevoEvent(email, "newsletter_signup");
-        return NextResponse.json({ success: true });
+        return finalizeSuccess();
       }
     } else {
       console.error(
@@ -121,11 +128,11 @@ export async function POST(request: NextRequest) {
         createResult.body
       );
       // Don't hard-fail newsletter signup because an external provider errored.
-      return NextResponse.json({ success: true });
+      return finalizeSuccess();
     }
   } catch (err) {
     console.error("Brevo API error:", err);
     // Keep the endpoint user-safe even when Brevo is temporarily unavailable.
-    return NextResponse.json({ success: true });
+    return finalizeSuccess();
   }
 }
