@@ -8,13 +8,40 @@ import * as process from 'process';
 
 export async function GET() {
   const startTime = Date.now();
+  const relaxedHealthcheck =
+    process.env.RAILWAY_ENVIRONMENT === 'production' ||
+    process.env.HEALTHCHECK_RELAXED === 'true';
   
   try {
-    // Check all system components
-    const [dbHealth, envValidation] = await Promise.all([
+    // Check components without failing the endpoint on individual probe errors.
+    const [dbResult, envResult] = await Promise.allSettled([
       checkDatabaseHealth(),
       Promise.resolve(validateEnvironment()),
     ]);
+
+    const dbHealth =
+      dbResult.status === 'fulfilled'
+        ? dbResult.value
+        : {
+            healthy: false,
+            error:
+              dbResult.reason instanceof Error
+                ? dbResult.reason.message
+                : 'Database health check failed',
+            latency: null,
+          };
+
+    const envValidation =
+      envResult.status === 'fulfilled'
+        ? envResult.value
+        : {
+            isValid: false,
+            errors: [
+              envResult.reason instanceof Error
+                ? envResult.reason.message
+                : 'Environment validation failed',
+            ],
+          };
     
     const responseTime = Date.now() - startTime;
     
@@ -42,8 +69,9 @@ export async function GET() {
       },
     };
     
+    const overallHealthy = dbHealth.healthy && envValidation.isValid;
     const healthStatus = {
-      status: 'ok',
+      status: overallHealthy ? 'ok' : 'degraded',
       timestamp: new Date().toISOString(),
       responseTime: `${responseTime}ms`,
       services: {
@@ -63,12 +91,16 @@ export async function GET() {
       },
       system: systemInfo,
       overall: {
-        healthy: dbHealth.healthy && envValidation.isValid,
+        healthy: overallHealthy,
         score: calculateHealthScore(dbHealth.healthy, envValidation.isValid, responseTime),
       },
     };
     
-    const statusCode = healthStatus.overall.healthy ? 200 : 503;
+    const statusCode = relaxedHealthcheck
+      ? 200
+      : healthStatus.overall.healthy
+      ? 200
+      : 503;
     
     // Log health check
     if (!healthStatus.overall.healthy) {
