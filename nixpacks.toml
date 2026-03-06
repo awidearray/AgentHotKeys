@@ -1,11 +1,13 @@
 [variables]
 NODE_ENV = "production"
+NIXPACKS_NO_CACHE = "1"
+
+[phases.install]
+cmds = ["npm ci --prefer-offline"]
 
 [phases.build]
-cmds = [
-  "npm cache clean --force",
-  "npm run build"
-]
+cmds = ["npm run build"]
+cacheDirectories = []
 
 [phases.start]
 cmd = "npm start"
