@@ -21,20 +21,31 @@ export default function Hero() {
           <GradientText>Pretend to Code.</GradientText>
         </h1>
 
-        <p className="text-xl text-text-dim max-w-[560px] leading-relaxed mb-10">
+        <p className="text-xl text-text-dim max-w-[560px] leading-relaxed mb-6">
           13 keyboard shortcuts that enforce real engineering discipline on AI
           agents. No stubs. No placeholders. No theater. Just production-grade
           code.
         </p>
+        
+        <p className="text-lg text-text-dim max-w-[580px] leading-relaxed mb-10 opacity-90">
+          Plus discover thousands more hotkeys from our creator community marketplace.
+        </p>
 
-        <div className="flex gap-4 flex-wrap mb-15">
+        <div className="flex gap-4 flex-wrap mb-6">
           <Button variant="primary" href="#pricing">
             Get the Command Keys
             <span className="text-[13px] opacity-80">&mdash; $35</span>
           </Button>
-          <Button variant="secondary" href="#questions">
-            See If This Is You
+          <Button variant="secondary" href="/marketplace">
+            Explore Marketplace
           </Button>
+        </div>
+        
+        <div className="flex gap-4 flex-wrap mb-15 text-sm text-text-dim">
+          <span>📊 500+ Creators</span>
+          <span>⚡ 2,000+ Hotkeys</span>
+          <span>💰 70% Revenue Share</span>
+          <span>🤖 AI Agent Ready</span>
         </div>
 
         <div className="flex gap-2 flex-wrap">

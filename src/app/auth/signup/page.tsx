@@ -1,17 +1,28 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 export default function SignUpPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
-  const [role, setRole] = useState<'human' | 'ai_agent'>('human');
+  const [role, setRole] = useState<'human' | 'ai_agent' | 'creator'>('human');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Handle query parameters from landing pages
+  useEffect(() => {
+    const type = searchParams?.get('type');
+    if (type === 'creator') {
+      setRole('creator');
+    } else if (type === 'agent') {
+      setRole('ai_agent');
+    }
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -63,33 +74,51 @@ export default function SignUpPage() {
             Join the HotKeys.ai marketplace
           </p>
 
-          <div className="flex gap-2 mb-6">
+          <div className="grid grid-cols-3 gap-2 mb-6">
             <button
               onClick={() => setRole('human')}
-              className={`flex-1 py-2 px-4 rounded-lg font-bold transition-all ${
+              className={`py-2 px-3 rounded-lg font-medium text-sm transition-all ${
                 role === 'human'
                   ? 'bg-accent text-bg'
-                  : 'bg-bg border border-border text-text-dim'
+                  : 'bg-bg border border-border text-text-dim hover:border-accent'
               }`}
             >
-              Human Creator
+              User
+            </button>
+            <button
+              onClick={() => setRole('creator')}
+              className={`py-2 px-3 rounded-lg font-medium text-sm transition-all ${
+                role === 'creator'
+                  ? 'bg-accent text-bg'
+                  : 'bg-bg border border-border text-text-dim hover:border-accent'
+              }`}
+            >
+              Creator
             </button>
             <button
               onClick={() => setRole('ai_agent')}
-              className={`flex-1 py-2 px-4 rounded-lg font-bold transition-all ${
+              className={`py-2 px-3 rounded-lg font-medium text-sm transition-all ${
                 role === 'ai_agent'
                   ? 'bg-accent text-bg'
-                  : 'bg-bg border border-border text-text-dim'
+                  : 'bg-bg border border-border text-text-dim hover:border-accent'
               }`}
             >
               AI Agent
             </button>
           </div>
 
+          <div className="mb-6 p-3 bg-bg rounded-lg border border-border">
+            <p className="text-sm text-text-dim">
+              {role === 'human' && "Browse and purchase hotkeys from creators"}
+              {role === 'creator' && "Upload hotkeys and earn 70% revenue share"}
+              {role === 'ai_agent' && "Programmatic access via API for bulk licensing"}
+            </p>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="name" className="block text-sm font-medium mb-2">
-                {role === 'ai_agent' ? 'Agent Name' : 'Full Name'}
+                {role === 'ai_agent' ? 'Agent Name' : role === 'creator' ? 'Creator Display Name' : 'Full Name'}
               </label>
               <input
                 id="name"
@@ -97,9 +126,20 @@ export default function SignUpPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
-                placeholder={role === 'ai_agent' ? 'GPT-Assistant-v1' : 'John Doe'}
+                placeholder={
+                  role === 'ai_agent' 
+                    ? 'GPT-Assistant-v1' 
+                    : role === 'creator' 
+                      ? 'DevToolsMaster' 
+                      : 'John Doe'
+                }
                 className="w-full px-4 py-3 bg-bg border border-border rounded-lg focus:border-accent focus:outline-none"
               />
+              {role === 'creator' && (
+                <p className="text-xs text-text-dim mt-1">
+                  This name will be shown on your hotkey packs and creator profile
+                </p>
+              )}
             </div>
 
             <div>
@@ -136,8 +176,17 @@ export default function SignUpPage() {
             {role === 'ai_agent' && (
               <div className="p-4 bg-bg border border-accent/30 rounded-lg">
                 <p className="text-sm text-text-dim">
-                  <strong className="text-accent">AI Agent Note:</strong> After signup, 
-                  you'll receive an API key for programmatic access to the marketplace.
+                  <strong className="text-accent">AI Agent:</strong> You'll receive an API key for programmatic 
+                  access to license generation and bulk purchasing.
+                </p>
+              </div>
+            )}
+
+            {role === 'creator' && (
+              <div className="p-4 bg-bg border border-accent/30 rounded-lg">
+                <p className="text-sm text-text-dim">
+                  <strong className="text-accent">Creator Benefits:</strong> Earn 70% revenue share, 
+                  multi-editor support, and detailed analytics dashboard.
                 </p>
               </div>
             )}

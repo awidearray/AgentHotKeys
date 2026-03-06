@@ -156,36 +156,121 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <Link href="/dashboard/hotkeys" className="bg-bg-card border-2 border-border hover:border-accent rounded-xl p-8 transition-all">
-            <h2 className="text-xl font-bold mb-2">My Hotkeys</h2>
-            <p className="text-text-dim">Create and manage your hotkeys</p>
-          </Link>
+        {/* Role-specific dashboard sections */}
+        {session?.user?.role === 'creator' && (
+          <>
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold mb-4">Creator Dashboard</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Link href="/dashboard/hotkeys" className="bg-bg-card border-2 border-border hover:border-accent rounded-xl p-6 transition-all">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-accent/20 rounded-lg flex items-center justify-center">
+                      <span className="text-lg">⚡</span>
+                    </div>
+                    <h3 className="text-lg font-bold">My Hotkeys</h3>
+                  </div>
+                  <p className="text-text-dim text-sm">Create and manage your hotkey packs</p>
+                </Link>
 
-          <Link href="/dashboard/purchases" className="bg-bg-card border-2 border-border hover:border-accent rounded-xl p-8 transition-all">
-            <h2 className="text-xl font-bold mb-2">My Purchases</h2>
-            <p className="text-text-dim">View and download purchased hotkeys</p>
-          </Link>
+                <Link href="/dashboard/revenue" className="bg-bg-card border-2 border-border hover:border-accent rounded-xl p-6 transition-all">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+                      <span className="text-lg">💰</span>
+                    </div>
+                    <h3 className="text-lg font-bold">Revenue</h3>
+                  </div>
+                  <p className="text-text-dim text-sm">Track earnings and payouts</p>
+                </Link>
 
-          <Link href="/dashboard/agent" className="bg-bg-card border-2 border-border hover:border-accent rounded-xl p-8 transition-all">
-            <h2 className="text-xl font-bold mb-2">AI Agent Settings</h2>
-            <p className="text-text-dim">Configure AI agent access and API keys</p>
-          </Link>
+                <Link href="/dashboard/analytics" className="bg-bg-card border-2 border-border hover:border-accent rounded-xl p-6 transition-all">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                      <span className="text-lg">📊</span>
+                    </div>
+                    <h3 className="text-lg font-bold">Analytics</h3>
+                  </div>
+                  <p className="text-text-dim text-sm">Sales and usage insights</p>
+                </Link>
+              </div>
+            </div>
+          </>
+        )}
 
-          <Link href="/dashboard/analytics" className="bg-bg-card border-2 border-border hover:border-accent rounded-xl p-8 transition-all">
-            <h2 className="text-xl font-bold mb-2">Analytics</h2>
-            <p className="text-text-dim">View detailed sales and usage analytics</p>
-          </Link>
+        {session?.user?.role === 'ai_agent' && (
+          <>
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold mb-4">AI Agent Dashboard</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <Link href="/dashboard/api-keys" className="bg-bg-card border-2 border-border hover:border-accent rounded-xl p-6 transition-all">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-accent/20 rounded-lg flex items-center justify-center">
+                      <span className="text-lg">🔑</span>
+                    </div>
+                    <h3 className="text-lg font-bold">API Keys</h3>
+                  </div>
+                  <p className="text-text-dim text-sm">Manage authentication tokens</p>
+                </Link>
 
-          <Link href="/dashboard/subscription" className="bg-bg-card border-2 border-border hover:border-accent rounded-xl p-8 transition-all">
-            <h2 className="text-xl font-bold mb-2">Subscription</h2>
-            <p className="text-text-dim">Manage your $2/month hosting plan</p>
-          </Link>
+                <Link href="/dashboard/bulk-licenses" className="bg-bg-card border-2 border-border hover:border-accent rounded-xl p-6 transition-all">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                      <span className="text-lg">⚡</span>
+                    </div>
+                    <h3 className="text-lg font-bold">Bulk Licensing</h3>
+                  </div>
+                  <p className="text-text-dim text-sm">Generate licenses programmatically</p>
+                </Link>
 
-          <Link href="/dashboard/settings" className="bg-bg-card border-2 border-border hover:border-accent rounded-xl p-8 transition-all">
-            <h2 className="text-xl font-bold mb-2">Settings</h2>
-            <p className="text-text-dim">Update profile and preferences</p>
-          </Link>
+                <Link href="/dashboard/usage" className="bg-bg-card border-2 border-border hover:border-accent rounded-xl p-6 transition-all">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                      <span className="text-lg">📈</span>
+                    </div>
+                    <h3 className="text-lg font-bold">Usage Analytics</h3>
+                  </div>
+                  <p className="text-text-dim text-sm">API calls and performance metrics</p>
+                </Link>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* General user dashboard */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold mb-4">
+            {session?.user?.role === 'creator' ? 'Additional Tools' : session?.user?.role === 'ai_agent' ? 'Additional Features' : 'My Dashboard'}
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Link href="/dashboard/purchases" className="bg-bg-card border-2 border-border hover:border-accent rounded-xl p-6 transition-all">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+                  <span className="text-lg">🛒</span>
+                </div>
+                <h3 className="text-lg font-bold">My Purchases</h3>
+              </div>
+              <p className="text-text-dim text-sm">View and download purchased hotkeys</p>
+            </Link>
+
+            <Link href="/dashboard/installation" className="bg-bg-card border-2 border-border hover:border-accent rounded-xl p-6 transition-all">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center">
+                  <span className="text-lg">⚙️</span>
+                </div>
+                <h3 className="text-lg font-bold">Installation Hub</h3>
+              </div>
+              <p className="text-text-dim text-sm">Install hotkeys across editors</p>
+            </Link>
+
+            <Link href="/dashboard/settings" className="bg-bg-card border-2 border-border hover:border-accent rounded-xl p-6 transition-all">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-8 h-8 bg-gray-500/20 rounded-lg flex items-center justify-center">
+                  <span className="text-lg">⚙️</span>
+                </div>
+                <h3 className="text-lg font-bold">Settings</h3>
+              </div>
+              <p className="text-text-dim text-sm">Update profile and preferences</p>
+            </Link>
+          </div>
         </div>
       </div>
     </main>

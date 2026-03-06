@@ -12,7 +12,7 @@ export default function Navbar() {
         <Link href="/" className="font-mono font-bold text-base md:text-lg text-accent no-underline">
           <span className="text-text-primary">HOT</span>KEYS<span className="text-text-dim">.ai</span>
         </Link>
-        <div className="flex gap-4 md:gap-8 items-center">
+        <div className="flex gap-4 md:gap-6 items-center">
           <Link
             href="/marketplace"
             className="hidden md:inline text-text-dim no-underline text-sm font-medium hover:text-accent transition-colors"
@@ -20,18 +20,27 @@ export default function Navbar() {
             Marketplace
           </Link>
           <Link
-            href="/community"
+            href="/creators"
             className="hidden md:inline text-text-dim no-underline text-sm font-medium hover:text-accent transition-colors"
           >
-            Community
+            For Creators
+          </Link>
+          <Link
+            href="/ai-agents"
+            className="hidden md:inline text-text-dim no-underline text-sm font-medium hover:text-accent transition-colors"
+          >
+            AI Agents
           </Link>
           {status === 'authenticated' ? (
             <>
               <Link
                 href="/dashboard"
-                className="hidden md:inline text-text-dim no-underline text-sm font-medium hover:text-accent transition-colors"
+                className="hidden md:inline text-text-dim no-underline text-sm font-medium hover:text-accent transition-colors relative"
               >
                 Dashboard
+                {session?.user?.role === 'creator' && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-accent rounded-full"></span>
+                )}
               </Link>
               <ConnectButton.Custom>
                 {({ account, chain, openConnectModal, mounted }) => {
