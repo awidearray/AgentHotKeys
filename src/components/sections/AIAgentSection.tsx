@@ -71,12 +71,12 @@ export default function AIAgentSection() {
                 <div className="text-accent">$ curl -X POST https://api.hotkeys.ai/v1/ai-agent/generate-license \\</div>
                 <div className="text-text-dim">  -H "X-API-Key: your_api_key" \\</div>
                 <div className="text-text-dim">  -H "Content-Type: application/json" \\</div>
-                <div className="text-text-dim">  -d '{</div>
+                <div className="text-text-dim">  -d {'\''}{'{'}{'\''}</div>
                 <div className="text-text-dim ml-4">"hotkey_pack_ids": ["pack_123", "pack_456"],</div>
                 <div className="text-text-dim ml-4">"buyer_user_id": "user_789",</div>
                 <div className="text-text-dim ml-4">"tier": "pro",</div>
                 <div className="text-text-dim ml-4">"max_devices": 5</div>
-                <div className="text-text-dim">  }'</div>
+                <div className="text-text-dim">  {'}'}{'\''}</div>
                 <div className="text-green-400 mt-3">✓ License AIAG-XK2L-9M8N-Q4P7 generated</div>
                 <div className="text-green-400">✓ Revenue share: $21.00 to creator</div>
               </div>

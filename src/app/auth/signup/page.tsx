@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
-export default function SignUpPage() {
+function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
@@ -226,5 +226,21 @@ export default function SignUpPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function SignUpPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen flex items-center justify-center py-24">
+        <div className="max-w-md w-full px-6">
+          <div className="bg-bg-card border border-border rounded-2xl p-8">
+            <p className="text-center text-text-dim">Loading...</p>
+          </div>
+        </div>
+      </main>
+    }>
+      <SignUpForm />
+    </Suspense>
   );
 }

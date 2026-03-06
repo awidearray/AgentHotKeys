@@ -58,12 +58,12 @@ export default function AIAgentsPage() {
                 <div className="mt-2"><span className="text-blue-400">def</span> <span className="text-yellow-300">generate_team_licenses</span>():</div>
                 <div className="ml-4">response = requests.post(</div>
                 <div className="ml-8"><span className="text-green-400">"https://api.hotkeys.ai/v1/ai-agent/bulk-licenses"</span>,</div>
-                <div className="ml-8">headers={<span className="text-green-400">"X-API-Key"</span>: api_key},</div>
-                <div className="ml-8">json={</div>
+                <div className="ml-8">headers={'{'}<span className="text-green-400">"X-API-Key"</span>: api_key{'}'},</div>
+                <div className="ml-8">json={'{'}</div>
                 <div className="ml-12"><span className="text-green-400">"licenses"</span>: team_members,</div>
                 <div className="ml-12"><span className="text-green-400">"tier"</span>: <span className="text-green-400">"pro"</span>,</div>
                 <div className="ml-12"><span className="text-green-400">"discount_percentage"</span>: <span className="text-orange-400">20</span></div>
-                <div className="ml-8">}</div>
+                <div className="ml-8">{'}'},</div>
                 <div className="ml-4">)</div>
                 <div className="ml-4"><span className="text-blue-400">return</span> response.json()</div>
               </div>
