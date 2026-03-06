@@ -1,7 +1,10 @@
 import { z } from 'zod';
 
-// Check if we should skip validation (for deployment builds)
-const skipValidation = process.env.SKIP_ENV_VALIDATION === 'true';
+// Check if we're in the browser
+const isClient = typeof window !== 'undefined';
+
+// Check if we should skip validation (for deployment builds or client-side)
+const skipValidation = process.env.SKIP_ENV_VALIDATION === 'true' || isClient;
 
 // Helper to create optional string with fallback
 const optionalString = (fallback?: string) => 
@@ -65,16 +68,25 @@ try {
     console.log('⚠️  Using placeholder values for missing environment variables');
   }
 } catch (error) {
-  if (!skipValidation && process.env.NODE_ENV === 'production') {
+  // Only throw error in server-side production builds, not in browser
+  if (!skipValidation && process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
     console.error('❌ Environment validation failed in production:');
     if (error instanceof z.ZodError) {
       console.error(error.issues.map(issue => `  - ${issue.path.join('.')}: ${issue.message}`).join('\n'));
     }
-    process.exit(1);
+    // Only exit in Node.js environment, not in browser
+    if (typeof process !== 'undefined' && process.exit) {
+      process.exit(1);
+    }
+    throw new Error('Environment validation failed');
   }
   
-  // In development or with skip validation, provide defaults
-  console.warn('⚠️  Using development fallbacks. Platform functionality will be limited.');
+  // In development, client-side, or with skip validation, provide defaults
+  if (isClient) {
+    console.log('🌐 Client-side environment - using public variables only');
+  } else {
+    console.warn('⚠️  Using development fallbacks. Platform functionality will be limited.');
+  }
   
   env = {
     NODE_ENV: process.env.NODE_ENV as any || 'development',
