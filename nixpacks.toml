@@ -17,4 +17,4 @@ cacheDirectories = []
 cmd = "npm start"
 
 [node]
-version = "22"
+version = "22.12"
