@@ -71,25 +71,7 @@ export default function MyHotkeysPage() {
       });
 
       if (!result.success) {
-        // Fallback to demo data for this user
-        setHotkeys([
-          {
-            id: 'demo-user-1',
-            title: 'My Custom Hotkey',
-            description: 'A hotkey I created for my specific workflow',
-            category: 'productivity',
-            tags: ['custom', 'workflow'],
-            price_usd: 15,
-            is_free: false,
-            status: 'approved',
-            downloads: 23,
-            rating_average: 4.5,
-            rating_count: 6,
-            created_at: new Date().toISOString()
-          }
-        ]);
-        setError('Database unavailable. Showing demo data.');
-        return;
+        throw new Error(result.error || 'Failed to fetch hotkeys');
       }
 
       setHotkeys(result.data || []);

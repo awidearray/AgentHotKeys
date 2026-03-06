@@ -78,34 +78,78 @@ export async function checkDatabaseHealth(): Promise<{ healthy: boolean; error?:
   }
 }
 
-// Safe database operation wrapper
+// Safe database operation wrapper with retry logic
 export async function safeDbOperation<T>(
-  operation: () => Promise<{ data: T | null; error: any }>
-): Promise<{ data: T | null; error: string | null; success: boolean }> {
-  try {
-    const result = await operation();
-    
-    if (result.error) {
-      console.error('Database error:', result.error);
+  operation: () => Promise<{ data: T | null; error: any }>,
+  maxRetries: number = 2,
+  retryDelay: number = 1000
+): Promise<{ data: T | null; error: string | null; success: boolean; retries: number }> {
+  let lastError: any = null;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      const result = await operation();
+      
+      if (result.error) {
+        lastError = result.error;
+        
+        // Don't retry on certain types of errors
+        const errorMessage = result.error.message || '';
+        const isRetryableError = !errorMessage.includes('duplicate key') && 
+                               !errorMessage.includes('foreign key') &&
+                               !errorMessage.includes('permission denied') &&
+                               !errorMessage.includes('authorization');
+        
+        if (!isRetryableError || attempt === maxRetries) {
+          console.error(`Database error (attempt ${attempt + 1}/${maxRetries + 1}):`, result.error);
+          return {
+            data: null,
+            error: result.error.message || 'Database operation failed',
+            success: false,
+            retries: attempt,
+          };
+        }
+        
+        // Wait before retrying
+        if (attempt < maxRetries) {
+          console.warn(`Database operation failed, retrying in ${retryDelay}ms (attempt ${attempt + 1}/${maxRetries + 1}):`, result.error.message);
+          await new Promise(resolve => setTimeout(resolve, retryDelay * (attempt + 1)));
+          continue;
+        }
+      }
+      
       return {
-        data: null,
-        error: result.error.message || 'Database operation failed',
-        success: false,
+        data: result.data,
+        error: null,
+        success: true,
+        retries: attempt,
       };
+    } catch (err) {
+      lastError = err;
+      
+      if (attempt === maxRetries) {
+        const message = err instanceof Error ? err.message : 'Unknown error';
+        console.error(`Database operation exception (attempt ${attempt + 1}/${maxRetries + 1}):`, err);
+        return {
+          data: null,
+          error: message,
+          success: false,
+          retries: attempt,
+        };
+      }
+      
+      // Wait before retrying
+      console.warn(`Database operation exception, retrying in ${retryDelay}ms (attempt ${attempt + 1}/${maxRetries + 1}):`, err);
+      await new Promise(resolve => setTimeout(resolve, retryDelay * (attempt + 1)));
     }
-    
-    return {
-      data: result.data,
-      error: null,
-      success: true,
-    };
-  } catch (err) {
-    const message = err instanceof Error ? err.message : 'Unknown error';
-    console.error('Database operation exception:', err);
-    return {
-      data: null,
-      error: message,
-      success: false,
-    };
   }
+  
+  // This should never be reached, but just in case
+  const message = lastError instanceof Error ? lastError.message : 'Unknown error';
+  return {
+    data: null,
+    error: message,
+    success: false,
+    retries: maxRetries,
+  };
 }

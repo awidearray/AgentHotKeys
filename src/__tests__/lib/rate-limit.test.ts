@@ -72,7 +72,7 @@ describe('Rate Limiting', () => {
         await limiter(req);
         await limiter(req);
 
-        await expect(limiter(req)).rejects.toThrow(RateLimitError);
+        await expect(limiter(req)).rejects.toThrow('Too many requests, please try again later');
       });
 
       it('should use custom error message', async () => {
@@ -102,7 +102,7 @@ describe('Rate Limiting', () => {
         await limiter(req);
 
         for (let i = 0; i < 5; i++) {
-          await expect(limiter(req)).rejects.toThrow(RateLimitError);
+          await expect(limiter(req)).rejects.toThrow('Too many requests, please try again later');
         }
       });
     });
@@ -114,7 +114,7 @@ describe('Rate Limiting', () => {
 
         await expect(limiter(req)).resolves.toBeUndefined();
         await expect(limiter(req)).resolves.toBeUndefined();
-        await expect(limiter(req)).rejects.toThrow(RateLimitError);
+        await expect(limiter(req)).rejects.toThrow('Too many requests, please try again later');
       });
 
       it('should handle multiple forwarded IPs', async () => {
@@ -128,7 +128,7 @@ describe('Rate Limiting', () => {
 
         await expect(limiter(req)).resolves.toBeUndefined();
         await expect(limiter(req)).resolves.toBeUndefined();
-        await expect(limiter(req)).rejects.toThrow(RateLimitError);
+        await expect(limiter(req)).rejects.toThrow('Too many requests, please try again later');
       });
 
       it('should handle custom key generator', async () => {
@@ -168,7 +168,7 @@ describe('Rate Limiting', () => {
         const req = mockRequest('192.168.1.1');
 
         await limiter(req);
-        await expect(limiter(req)).rejects.toThrow(RateLimitError);
+        await expect(limiter(req)).rejects.toThrow('Too many requests, please try again later');
 
         jest.advanceTimersByTime(1);
 
@@ -182,7 +182,7 @@ describe('Rate Limiting', () => {
         const promises = Array(100).fill(null).map(() => limiter(req));
         await expect(Promise.all(promises)).resolves.toBeDefined();
 
-        await expect(limiter(req)).rejects.toThrow(RateLimitError);
+        await expect(limiter(req)).rejects.toThrow('Too many requests, please try again later');
       });
     });
 

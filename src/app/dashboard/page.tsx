@@ -37,62 +37,106 @@ export default function DashboardPage() {
     setStatsError(null);
 
     try {
-      // Fetch user's hotkeys
-      const hotkeysResult = await safeDbOperation(async () => {
-        const { supabaseAdmin } = await import('@/lib/supabase/client');
-        return await supabaseAdmin
-          .from('hotkeys')
-          .select('id')
-          .eq('creator_id', session.user.id);
-      });
+      // Fetch comprehensive user data with proper aggregations
+      const [hotkeysResult, salesResult, purchasesResult, subscriptionResult] = await Promise.all([
+        // User's hotkeys count
+        safeDbOperation(async () => {
+          const { supabaseAdmin } = await import('@/lib/supabase/client');
+          return await supabaseAdmin
+            .from('hotkeys')
+            .select('id')
+            .eq('creator_id', session.user.id);
+        }),
+        
+        // Sales of user's hotkeys (if they're a creator)
+        safeDbOperation(async () => {
+          const { supabaseAdmin } = await import('@/lib/supabase/client');
+          
+          // First get user's hotkey IDs
+          const { data: hotkeys } = await supabaseAdmin
+            .from('hotkeys')
+            .select('id')
+            .eq('creator_id', session.user.id);
+          
+          if (!hotkeys?.length) {
+            return { data: [], error: null };
+          }
+          
+          const hotkeyIds = hotkeys.map(h => h.id);
+          
+          // Then get purchases of those hotkeys
+          return await supabaseAdmin
+            .from('purchases')
+            .select('amount_usd')
+            .in('hotkey_id', hotkeyIds)
+            .eq('status', 'completed');
+        }),
+        
+        // User's own purchases
+        safeDbOperation(async () => {
+          const { supabaseAdmin } = await import('@/lib/supabase/client');
+          return await supabaseAdmin
+            .from('purchases')
+            .select('amount_usd')
+            .eq('buyer_id', session.user.id)
+            .eq('status', 'completed');
+        }),
+        
+        // User's subscription status
+        safeDbOperation(async () => {
+          const { supabaseAdmin } = await import('@/lib/supabase/client');
+          return await supabaseAdmin
+            .from('subscriptions')
+            .select('status')
+            .eq('user_id', session.user.id)
+            .eq('status', 'active')
+            .maybeSingle();
+        })
+      ]);
 
-      // Fetch user's purchases 
-      const purchasesResult = await safeDbOperation(async () => {
-        const { supabaseAdmin } = await import('@/lib/supabase/client');
-        return await supabaseAdmin
-          .from('purchases')
-          .select('amount_usd')
-          .eq('buyer_id', session.user.id)
-          .eq('status', 'completed');
-      });
-
-      // Fetch user's subscription
-      const subscriptionResult = await safeDbOperation(async () => {
-        const { supabaseAdmin } = await import('@/lib/supabase/client');
-        return await supabaseAdmin
-          .from('subscriptions')
-          .select('status')
-          .eq('user_id', session.user.id)
-          .eq('status', 'active')
-          .single();
-      });
-
-      // If all operations failed, use demo data
-      if (!hotkeysResult.success && !purchasesResult.success && !subscriptionResult.success) {
-        setStats({
-          totalHotkeys: 3,
-          totalSales: 12,
-          totalRevenue: 142.50,
-          activeSubscription: true,
-        });
-        setStatsError('Database unavailable. Showing demo data.');
-        return;
+      // Check if we have any successful operations
+      const hasData = hotkeysResult.success || salesResult.success || purchasesResult.success || subscriptionResult.success;
+      
+      if (!hasData) {
+        throw new Error('All database operations failed');
       }
 
-      const totalRevenue = purchasesResult.success
-        ? purchasesResult.data?.reduce((sum, p) => sum + (p.amount_usd || 0), 0) || 0
-        : 0;
+      // Calculate stats based on user role
+      let totalRevenue = 0;
+      let totalSales = 0;
+      
+      if (session.user.role === 'creator') {
+        // For creators, show revenue from their hotkey sales
+        totalRevenue = salesResult.success
+          ? salesResult.data?.reduce((sum, p) => sum + (p.amount_usd || 0), 0) || 0
+          : 0;
+        totalSales = salesResult.success ? (salesResult.data?.length || 0) : 0;
+      } else {
+        // For regular users, show their purchase history
+        totalRevenue = purchasesResult.success
+          ? purchasesResult.data?.reduce((sum, p) => sum + (p.amount_usd || 0), 0) || 0
+          : 0;
+        totalSales = purchasesResult.success ? (purchasesResult.data?.length || 0) : 0;
+      }
 
       setStats({
         totalHotkeys: hotkeysResult.success ? (hotkeysResult.data?.length || 0) : 0,
-        totalSales: purchasesResult.success ? (purchasesResult.data?.length || 0) : 0,
+        totalSales,
         totalRevenue,
-        activeSubscription: subscriptionResult.success ? !!subscriptionResult.data : false,
+        activeSubscription: subscriptionResult.success && !!subscriptionResult.data,
       });
 
     } catch (error) {
       console.error('Dashboard stats error:', error);
-      setStatsError('Failed to load dashboard data. Please refresh the page.');
+      setStatsError('Failed to load dashboard data. Please check your connection and try again.');
+      
+      // Set stats to zero instead of showing fake data
+      setStats({
+        totalHotkeys: 0,
+        totalSales: 0,
+        totalRevenue: 0,
+        activeSubscription: false,
+      });
     } finally {
       setStatsLoading(false);
     }
@@ -125,7 +169,9 @@ export default function DashboardPage() {
             )}
           </div>
           <div className="bg-bg-card border border-border rounded-xl p-6">
-            <h3 className="text-text-dim text-sm mb-2">Total Sales</h3>
+            <h3 className="text-text-dim text-sm mb-2">
+              {session?.user?.role === 'creator' ? 'Total Sales' : 'Purchases Made'}
+            </h3>
             {statsLoading ? (
               <div className="text-2xl text-text-dim">Loading...</div>
             ) : (
@@ -133,11 +179,13 @@ export default function DashboardPage() {
             )}
           </div>
           <div className="bg-bg-card border border-border rounded-xl p-6">
-            <h3 className="text-text-dim text-sm mb-2">Revenue</h3>
+            <h3 className="text-text-dim text-sm mb-2">
+              {session?.user?.role === 'creator' ? 'Revenue Earned' : 'Total Spent'}
+            </h3>
             {statsLoading ? (
               <div className="text-2xl text-text-dim">Loading...</div>
             ) : (
-              <p className="text-3xl font-bold">${stats.totalRevenue.toFixed(2)}</p>
+              <p className="text-3xl font-bold text-accent">${stats.totalRevenue.toFixed(2)}</p>
             )}
           </div>
           <div className="bg-bg-card border border-border rounded-xl p-6">

@@ -31,7 +31,7 @@ const defaultOptions: Required<RateLimitOptions> = {
   },
   skip: () => false,
   handler: (req) => {
-    throw new RateLimitError();
+    throw new RateLimitError('Too many requests, please try again later');
   },
 };
 
@@ -85,7 +85,7 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
         path: req.nextUrl.pathname,
       });
       
-      throw new RateLimitError(config.message);
+      throw new RateLimitError(config.message || 'Too many requests');
     }
   };
 }

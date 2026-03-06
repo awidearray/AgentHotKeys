@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { checkDatabaseHealth } from '@/lib/supabase/client';
 import { validateEnvironment } from '@/lib/env';
 import { logger } from '@/lib/logger';
+import { monitoring } from '@/lib/monitoring';
 import * as os from 'os';
 import * as process from 'process';
 
@@ -16,6 +17,13 @@ export async function GET() {
     ]);
     
     const responseTime = Date.now() - startTime;
+    
+    // Record health metrics
+    monitoring.checkDatabaseHealth(dbHealth.healthy, dbHealth.latency);
+    monitoring.recordMetric({
+      name: 'health_check_duration',
+      value: responseTime
+    });
     
     // System metrics
     const memoryUsage = process.memoryUsage();

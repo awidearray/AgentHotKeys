@@ -50,9 +50,15 @@ export default function MarketplacePage() {
       })}`);
       
       if (!response.ok) {
-        const errorData = await response.json();
-        setError(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        if (response.status === 503) {
+          const errorData = await response.json();
+          setError(`Service temporarily unavailable: ${errorData.message}`);
+        } else {
+          const errorData = await response.json();
+          setError(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        }
         setHotkeys([]);
+        setDemoMode(false);
         return;
       }
       

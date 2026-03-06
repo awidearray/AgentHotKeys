@@ -1,255 +1,347 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { supabaseAdmin } from '@/lib/supabase/client';
+import Link from 'next/link';
+
+interface Editor {
+  id: string;
+  name: string;
+  icon: string;
+  command: string;
+  instructions: string[];
+  supported: boolean;
+}
+
+const editors: Editor[] = [
+  {
+    id: 'vscode',
+    name: 'VS Code',
+    icon: '📝',
+    command: 'code --install-extension hotkeys-ai.hotkeys',
+    instructions: [
+      'Open VS Code',
+      'Press Cmd+Shift+P (Mac) or Ctrl+Shift+P (Windows/Linux)',
+      'Type "Install from VSIX" and select it',
+      'Navigate to your downloaded hotkey file',
+      'Restart VS Code to activate'
+    ],
+    supported: true
+  },
+  {
+    id: 'cursor',
+    name: 'Cursor',
+    icon: '⚡',
+    command: 'cursor --install-extension hotkeys-ai.hotkeys',
+    instructions: [
+      'Open Cursor',
+      'Navigate to Extensions (Cmd+Shift+X)',
+      'Click the ... menu and select "Install from VSIX"',
+      'Select your downloaded hotkey file',
+      'Reload window to activate'
+    ],
+    supported: true
+  },
+  {
+    id: 'vim',
+    name: 'Vim/Neovim',
+    icon: '🖥️',
+    command: ':source ~/.hotkeys-ai/hotkeys.vim',
+    instructions: [
+      'Copy hotkey file to ~/.hotkeys-ai/',
+      'Add "source ~/.hotkeys-ai/hotkeys.vim" to your .vimrc',
+      'Restart Vim or run :source ~/.vimrc',
+      'Verify with :map to see new bindings'
+    ],
+    supported: true
+  },
+  {
+    id: 'sublime',
+    name: 'Sublime Text',
+    icon: '🎨',
+    command: 'subl --command "install_hotkeys"',
+    instructions: [
+      'Open Sublime Text',
+      'Go to Preferences > Browse Packages',
+      'Create a "HotkeysAI" folder',
+      'Copy your hotkey file there',
+      'Restart Sublime Text'
+    ],
+    supported: true
+  },
+  {
+    id: 'jetbrains',
+    name: 'JetBrains IDEs',
+    icon: '🚀',
+    command: 'idea install-plugin hotkeys-ai',
+    instructions: [
+      'Open your JetBrains IDE',
+      'Go to Settings > Plugins',
+      'Click gear icon > Install Plugin from Disk',
+      'Select your hotkey file',
+      'Restart the IDE'
+    ],
+    supported: true
+  },
+  {
+    id: 'emacs',
+    name: 'Emacs',
+    icon: '📚',
+    command: 'M-x package-install hotkeys-ai',
+    instructions: [
+      'Copy hotkey file to ~/.emacs.d/hotkeys/',
+      'Add (load "~/.emacs.d/hotkeys/hotkeys.el") to init.el',
+      'Reload config with M-x eval-buffer',
+      'Check bindings with C-h b'
+    ],
+    supported: false
+  }
+];
 
 export default function InstallationHubPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
-  const [selectedEditor, setSelectedEditor] = useState<'vscode' | 'jetbrains' | 'sublime'>('vscode');
-  const [installingLicense, setInstallingLicense] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  const hotkeyId = searchParams.get('hotkey');
+  
+  const [selectedEditor, setSelectedEditor] = useState<Editor>(editors[0]);
+  const [hotkey, setHotkey] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
 
-  // Mock user licenses - in real implementation, this would come from API
-  const userLicenses = [
-    {
-      id: 'lic_1',
-      key: 'HOTK-A1B2-C3D4-E5F6',
-      hotkeyPacks: ['VS Code Productivity Pack', 'React Development Essentials'],
-      status: 'active',
-      deviceCount: 1,
-      maxDevices: 3,
-      installedEditors: ['vscode'],
-      creator: 'DevMaster',
-    },
-    {
-      id: 'lic_2', 
-      key: 'HOTK-G7H8-I9J0-K1L2',
-      hotkeyPacks: ['JavaScript Power User'],
-      status: 'active',
-      deviceCount: 0,
-      maxDevices: 1,
-      installedEditors: [],
-      creator: 'CodeNinja',
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/auth/signin');
     }
-  ];
+  }, [status, router]);
 
-  const editors = [
-    {
-      id: 'vscode',
-      name: 'VS Code',
-      icon: '📝',
-      description: 'Visual Studio Code',
-      installed: true,
-      version: '1.85.0'
-    },
-    {
-      id: 'jetbrains',
-      name: 'JetBrains',
-      icon: '🧠',
-      description: 'IntelliJ, WebStorm, etc.',
-      installed: false,
-      version: null
-    },
-    {
-      id: 'sublime',
-      name: 'Sublime Text',
-      icon: '📄',
-      description: 'Sublime Text Editor',
-      installed: true,
-      version: '4.0'
+  useEffect(() => {
+    if (hotkeyId && session?.user?.id) {
+      fetchHotkey();
     }
-  ];
+  }, [hotkeyId, session]);
+
+  async function fetchHotkey() {
+    if (!hotkeyId || !session?.user?.id) return;
+    
+    setLoading(true);
+    try {
+      // Check if user has access to this hotkey
+      const { data: purchase } = await supabaseAdmin
+        .from('purchases')
+        .select('hotkey:hotkeys(*)')
+        .eq('hotkey_id', hotkeyId)
+        .eq('buyer_id', session.user.id)
+        .eq('status', 'completed')
+        .single();
+
+      if (purchase?.hotkey) {
+        setHotkey(purchase.hotkey);
+      }
+    } catch (err) {
+      console.error('Failed to fetch hotkey:', err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function trackInstallation(editorId: string) {
+    if (!session?.user?.id || !hotkeyId) return;
+
+    try {
+      await supabaseAdmin
+        .from('installation_events')
+        .insert({
+          user_id: session.user.id,
+          hotkey_id: hotkeyId,
+          editor: editorId,
+          event_type: 'install_started'
+        });
+    } catch (err) {
+      console.error('Failed to track installation:', err);
+    }
+  }
 
   if (status === 'loading') {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
   }
 
-  if (!session) {
-    router.push('/auth/signin');
-    return null;
-  }
-
-  const handleInstall = async (licenseId: string, editorId: string) => {
-    setInstallingLicense(licenseId);
-    
-    // Simulate installation process
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // In real implementation, this would:
-    // 1. Call the hotkey installer API
-    // 2. Download and configure hotkeys for the editor
-    // 3. Update license activation status
-    
-    setInstallingLicense(null);
-    
-    // Show success message or update UI
-    alert('Hotkeys installed successfully!');
-  };
-
   return (
     <main className="min-h-screen py-24">
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-6">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-2">Installation Hub</h1>
-          <p className="text-text-dim">Install and manage your hotkeys across different editors</p>
-        </div>
-
-        {/* Editor Selection */}
-        <div className="mb-12">
-          <h2 className="text-2xl font-bold mb-6">Detected Editors</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            {editors.map((editor) => (
-              <div
-                key={editor.id}
-                className={`bg-bg-card border-2 rounded-xl p-6 cursor-pointer transition-all ${
-                  selectedEditor === editor.id
-                    ? 'border-accent'
-                    : editor.installed
-                      ? 'border-border hover:border-accent'
-                      : 'border-border opacity-60'
-                }`}
-                onClick={() => editor.installed && setSelectedEditor(editor.id as any)}
-              >
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-3xl">{editor.icon}</span>
-                  <div>
-                    <h3 className="text-xl font-bold">{editor.name}</h3>
-                    <p className="text-text-dim text-sm">{editor.description}</p>
-                  </div>
-                </div>
-                
-                {editor.installed ? (
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-green-500 rounded-full"></span>
-                    <span className="text-green-400 text-sm font-medium">Detected v{editor.version}</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <span className="w-2 h-2 bg-gray-500 rounded-full"></span>
-                    <span className="text-text-dim text-sm">Not detected</span>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* License Installation */}
-        <div>
-          <h2 className="text-2xl font-bold mb-6">Your Licenses</h2>
-          
-          {userLicenses.length === 0 ? (
-            <div className="bg-bg-card border border-border rounded-xl p-8 text-center">
-              <h3 className="text-xl font-bold mb-2">No licenses found</h3>
-              <p className="text-text-dim mb-6">Purchase hotkey packs from the marketplace to get started.</p>
-              <button
-                onClick={() => router.push('/marketplace')}
-                className="bg-accent text-bg px-6 py-3 rounded-lg font-bold hover:bg-accent-bright transition-all"
-              >
-                Browse Marketplace
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {userLicenses.map((license) => (
-                <div key={license.id} className="bg-bg-card border border-border rounded-xl p-6">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-xl font-bold">{license.hotkeyPacks.join(', ')}</h3>
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          license.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'
-                        }`}>
-                          {license.status}
-                        </span>
-                      </div>
-                      <p className="text-text-dim text-sm mb-2">
-                        License: <span className="font-mono">{license.key}</span>
-                      </p>
-                      <p className="text-text-dim text-sm mb-3">
-                        by {license.creator} • {license.deviceCount}/{license.maxDevices} devices used
-                      </p>
-                      
-                      <div className="flex gap-2 flex-wrap">
-                        {license.installedEditors.map((editorId) => (
-                          <span key={editorId} className="px-2 py-1 bg-accent/20 text-accent rounded text-xs font-medium">
-                            {editors.find(e => e.id === editorId)?.name} ✓
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-3">
-                      {license.deviceCount < license.maxDevices && (
-                        <button
-                          onClick={() => handleInstall(license.id, selectedEditor)}
-                          disabled={installingLicense === license.id || license.installedEditors.includes(selectedEditor)}
-                          className="px-4 py-2 bg-accent text-bg rounded-lg font-medium hover:bg-accent-bright transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {installingLicense === license.id 
-                            ? 'Installing...' 
-                            : license.installedEditors.includes(selectedEditor)
-                              ? 'Installed'
-                              : `Install to ${editors.find(e => e.id === selectedEditor)?.name}`
-                          }
-                        </button>
-                      )}
-                      
-                      <button className="px-4 py-2 bg-bg border border-border rounded-lg font-medium hover:border-accent transition-all">
-                        Manage
-                      </button>
-                    </div>
-                  </div>
-                  
-                  {license.deviceCount >= license.maxDevices && (
-                    <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
-                      <p className="text-yellow-400 text-sm">
-                        ⚠️ Device limit reached. Deactivate an existing installation to install on a new device.
-                      </p>
-                    </div>
-                  )}
-                </div>
-              ))}
+          <p className="text-text-dim">
+            Step-by-step guides to install your hotkeys in any editor
+          </p>
+          {hotkey && (
+            <div className="mt-4 p-4 bg-accent/10 border border-accent/30 rounded-lg">
+              <p className="text-sm">
+                Installing: <span className="font-bold">{hotkey.title}</span>
+              </p>
             </div>
           )}
         </div>
 
-        {/* Installation Instructions */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold mb-6">Installation Guide</h2>
-          <div className="bg-bg-card border border-border rounded-xl p-6">
-            <div className="grid md:grid-cols-2 gap-8">
-              <div>
-                <h3 className="text-lg font-bold mb-4">How Installation Works</h3>
-                <div className="space-y-3 text-sm">
-                  <div className="flex gap-3">
-                    <span className="w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center text-accent text-xs font-bold">1</span>
-                    <p className="text-text-dim">Select your editor from the detected list above</p>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Editor Selection */}
+          <div className="lg:col-span-1">
+            <h2 className="text-lg font-bold mb-4">Select Your Editor</h2>
+            <div className="space-y-2">
+              {editors.map((editor) => (
+                <button
+                  key={editor.id}
+                  onClick={() => {
+                    setSelectedEditor(editor);
+                    trackInstallation(editor.id);
+                  }}
+                  className={`w-full p-4 rounded-lg border transition-all text-left ${
+                    selectedEditor.id === editor.id
+                      ? 'bg-accent/10 border-accent'
+                      : 'bg-bg-card border-border hover:border-accent/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{editor.icon}</span>
+                    <div className="flex-1">
+                      <p className="font-medium">{editor.name}</p>
+                      {!editor.supported && (
+                        <p className="text-xs text-yellow-400">Coming Soon</p>
+                      )}
+                    </div>
+                    {selectedEditor.id === editor.id && (
+                      <span className="text-accent">✓</span>
+                    )}
                   </div>
-                  <div className="flex gap-3">
-                    <span className="w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center text-accent text-xs font-bold">2</span>
-                    <p className="text-text-dim">Click "Install" on any active license</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Installation Instructions */}
+          <div className="lg:col-span-2">
+            <div className="bg-bg-card border border-border rounded-xl p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <span className="text-3xl">{selectedEditor.icon}</span>
+                <div>
+                  <h2 className="text-2xl font-bold">{selectedEditor.name} Installation</h2>
+                  {!selectedEditor.supported && (
+                    <p className="text-sm text-yellow-400">Support coming soon</p>
+                  )}
+                </div>
+              </div>
+
+              {selectedEditor.supported ? (
+                <>
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold mb-3">Quick Install Command</h3>
+                    <div className="flex items-center gap-3">
+                      <code className="flex-1 p-3 bg-bg rounded-lg font-mono text-sm">
+                        {selectedEditor.command}
+                      </code>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedEditor.command);
+                          alert('Command copied to clipboard!');
+                        }}
+                        className="px-4 py-2 bg-accent text-bg rounded-lg hover:bg-accent-bright transition-all"
+                      >
+                        Copy
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-3">
-                    <span className="w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center text-accent text-xs font-bold">3</span>
-                    <p className="text-text-dim">Hotkeys are automatically configured in your editor</p>
+
+                  <div className="mb-6">
+                    <h3 className="text-lg font-bold mb-3">Manual Installation Steps</h3>
+                    <ol className="space-y-3">
+                      {selectedEditor.instructions.map((step, index) => (
+                        <li key={index} className="flex gap-3">
+                          <span className="flex-shrink-0 w-8 h-8 bg-accent/20 text-accent rounded-full flex items-center justify-center font-bold text-sm">
+                            {index + 1}
+                          </span>
+                          <p className="pt-1">{step}</p>
+                        </li>
+                      ))}
+                    </ol>
                   </div>
-                  <div className="flex gap-3">
-                    <span className="w-6 h-6 bg-accent/20 rounded-full flex items-center justify-center text-accent text-xs font-bold">4</span>
-                    <p className="text-text-dim">Restart your editor to activate the new hotkeys</p>
+
+                  <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                    <h4 className="font-bold mb-2 text-blue-400">💡 Pro Tips</h4>
+                    <ul className="space-y-2 text-sm">
+                      <li>• Make sure to backup your existing keybindings before installation</li>
+                      <li>• Some hotkeys may conflict with default editor shortcuts</li>
+                      <li>• You can customize keybindings after installation in your editor settings</li>
+                      <li>• Join our Discord for installation support and troubleshooting</li>
+                    </ul>
+                  </div>
+
+                  {hotkey && (
+                    <div className="mt-6 pt-6 border-t border-border">
+                      <h3 className="text-lg font-bold mb-3">Hotkey Details</h3>
+                      <div className="space-y-2 text-sm">
+                        <p><span className="text-text-dim">Title:</span> {hotkey.title}</p>
+                        <p><span className="text-text-dim">Category:</span> {hotkey.category}</p>
+                        <p><span className="text-text-dim">Compatibility:</span> {hotkey.content?.compatibility?.join(', ') || 'All editors'}</p>
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">🚧</div>
+                  <h3 className="text-xl font-bold mb-2">Coming Soon</h3>
+                  <p className="text-text-dim mb-6">
+                    {selectedEditor.name} support is under development
+                  </p>
+                  <Link
+                    href="/dashboard"
+                    className="inline-block px-6 py-3 bg-accent text-bg rounded-lg hover:bg-accent-bright transition-all"
+                  >
+                    Back to Dashboard
+                  </Link>
+                </div>
+              )}
+            </div>
+
+            {/* Video Tutorial Section */}
+            {selectedEditor.supported && (
+              <div className="mt-6 bg-bg-card border border-border rounded-xl p-6">
+                <h3 className="text-lg font-bold mb-4">Video Tutorial</h3>
+                <div className="aspect-video bg-bg rounded-lg flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="text-4xl mb-2">🎬</div>
+                    <p className="text-text-dim">Video tutorial coming soon</p>
                   </div>
                 </div>
               </div>
-              
-              <div>
-                <h3 className="text-lg font-bold mb-4">Troubleshooting</h3>
-                <div className="space-y-3 text-sm text-text-dim">
-                  <p><strong>Editor not detected?</strong> Make sure it's installed and in your PATH.</p>
-                  <p><strong>Installation failed?</strong> Try running your editor as administrator.</p>
-                  <p><strong>Hotkeys not working?</strong> Check for conflicts in your existing keybindings.</p>
-                  <p><strong>Need help?</strong> Contact support with your license key.</p>
-                </div>
+            )}
+
+            {/* Support Section */}
+            <div className="mt-6 bg-bg-card border border-border rounded-xl p-6">
+              <h3 className="text-lg font-bold mb-4">Need Help?</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Link
+                  href="/docs"
+                  className="p-4 bg-bg border border-border rounded-lg hover:border-accent transition-all text-center"
+                >
+                  <div className="text-2xl mb-2">📖</div>
+                  <p className="font-medium">Documentation</p>
+                </Link>
+                <Link
+                  href="/discord"
+                  className="p-4 bg-bg border border-border rounded-lg hover:border-accent transition-all text-center"
+                >
+                  <div className="text-2xl mb-2">💬</div>
+                  <p className="font-medium">Discord Support</p>
+                </Link>
+                <Link
+                  href="/support"
+                  className="p-4 bg-bg border border-border rounded-lg hover:border-accent transition-all text-center"
+                >
+                  <div className="text-2xl mb-2">📧</div>
+                  <p className="font-medium">Contact Support</p>
+                </Link>
               </div>
             </div>
           </div>

@@ -2,6 +2,10 @@
   "name": "hotkeys-ai",
   "version": "1.0.0",
   "private": true,
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build",
@@ -12,6 +16,7 @@
     "test:coverage": "jest --coverage",
     "brevo:setup": "npx tsx scripts/brevo-setup.ts",
     "brevo:blueprint": "npx tsx scripts/brevo-automations-blueprint.ts",
+    "security:scan": "node scripts/security-scan.js",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
@@ -23,6 +28,7 @@
     "@t3-oss/env-nextjs": "^0.13.10",
     "@tanstack/react-query": "^5.90.21",
     "bcryptjs": "^3.0.3",
+    "chart.js": "^4.4.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "cors": "^2.8.6",
@@ -38,6 +44,7 @@
     "pino": "^10.3.1",
     "pino-pretty": "^13.1.3",
     "react": "^19.0.0",
+    "react-chartjs-2": "^5.2.0",
     "react-dom": "^19.0.0",
     "stripe": "^17.0.0",
     "viem": "^2.47.0",

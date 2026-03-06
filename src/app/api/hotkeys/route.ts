@@ -23,32 +23,42 @@ export async function GET(request: NextRequest) {
     
     console.log('[API] GET /api/hotkeys', { category, search, creator_id, demo });
     
-    // If demo mode is requested or database fails, return sample data
+    // If demo mode is explicitly requested, return sample data
     if (demo === 'true') {
-      const { getDemoData } = await import('@/lib/demo/sample-data');
-      const demoData = getDemoData();
-      let filteredHotkeys = demoData.hotkeys;
-      
-      // Apply filters to demo data
-      if (category && category !== 'all') {
-        filteredHotkeys = filteredHotkeys.filter(h => h.category === category);
+      console.log('[API] Demo mode explicitly requested');
+      try {
+        const { getDemoData } = await import('@/lib/demo/sample-data');
+        const demoData = getDemoData();
+        let filteredHotkeys = demoData.hotkeys;
+        
+        // Apply filters to demo data
+        if (category && category !== 'all') {
+          filteredHotkeys = filteredHotkeys.filter(h => h.category === category);
+        }
+        
+        if (search) {
+          const searchLower = search.toLowerCase();
+          filteredHotkeys = filteredHotkeys.filter(h => 
+            h.title.toLowerCase().includes(searchLower) ||
+            h.description.toLowerCase().includes(searchLower) ||
+            h.tags.some(tag => tag.toLowerCase().includes(searchLower))
+          );
+        }
+        
+        if (creator_id) {
+          filteredHotkeys = filteredHotkeys.filter(h => h.creator.id === creator_id);
+        }
+        
+        console.log(`[API] Demo mode: returning ${filteredHotkeys.length} sample hotkeys`);
+        return NextResponse.json(filteredHotkeys, {
+          headers: { 'X-Demo-Mode': 'true' }
+        });
+      } catch (demoError) {
+        console.error('[API] Demo data failed:', demoError);
+        return NextResponse.json([], {
+          headers: { 'X-Demo-Mode': 'true', 'X-Demo-Error': 'Demo data unavailable' }
+        });
       }
-      
-      if (search) {
-        const searchLower = search.toLowerCase();
-        filteredHotkeys = filteredHotkeys.filter(h => 
-          h.title.toLowerCase().includes(searchLower) ||
-          h.description.toLowerCase().includes(searchLower) ||
-          h.tags.some(tag => tag.toLowerCase().includes(searchLower))
-        );
-      }
-      
-      if (creator_id) {
-        filteredHotkeys = filteredHotkeys.filter(h => h.creator.id === creator_id);
-      }
-      
-      console.log(`[API] Demo mode: returning ${filteredHotkeys.length} sample hotkeys`);
-      return NextResponse.json(filteredHotkeys);
     }
     
     const result = await safeDbOperation(async () => {
@@ -88,38 +98,15 @@ export async function GET(request: NextRequest) {
     });
 
     if (!result.success) {
-      console.error('[API] Database error, falling back to demo data:', result.error);
-      
-      // Fallback to demo data when database fails
-      const { getDemoData } = await import('@/lib/demo/sample-data');
-      const demoData = getDemoData();
-      let filteredHotkeys = demoData.hotkeys;
-      
-      // Apply filters to demo data
-      if (category && category !== 'all') {
-        filteredHotkeys = filteredHotkeys.filter(h => h.category === category);
-      }
-      
-      if (search) {
-        const searchLower = search.toLowerCase();
-        filteredHotkeys = filteredHotkeys.filter(h => 
-          h.title.toLowerCase().includes(searchLower) ||
-          h.description.toLowerCase().includes(searchLower) ||
-          h.tags.some(tag => tag.toLowerCase().includes(searchLower))
-        );
-      }
-      
-      if (creator_id) {
-        filteredHotkeys = filteredHotkeys.filter(h => h.creator.id === creator_id);
-      }
-      
-      // Return demo data with special headers to indicate fallback mode
-      return NextResponse.json(filteredHotkeys, {
-        headers: {
-          'X-Demo-Mode': 'true',
-          'X-Demo-Reason': 'database_unavailable'
-        }
-      });
+      console.error('[API] Database error:', result.error);
+      return NextResponse.json(
+        { 
+          error: 'Database unavailable',
+          message: 'Unable to fetch hotkeys at this time. Please try again later.',
+          details: result.error
+        }, 
+        { status: 503 }
+      );
     }
 
     console.log(`[API] Found ${result.data?.length || 0} hotkeys from database`);

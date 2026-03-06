@@ -4,7 +4,10 @@ import { z } from 'zod';
 const isClient = typeof window !== 'undefined';
 
 // Check if we should skip validation (for deployment builds or client-side)
-const skipValidation = process.env.SKIP_ENV_VALIDATION === 'true' || isClient;
+const skipValidation = process.env.SKIP_ENV_VALIDATION === 'true' || 
+                      process.env.RAILWAY_ENVIRONMENT === 'production' ||
+                      process.env.NODE_ENV === 'production' ||
+                      isClient;
 
 // Helper to create optional string with fallback
 const optionalString = (fallback?: string) => 

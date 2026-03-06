@@ -21,8 +21,8 @@ jest.mock('process', () => ({
 describe('GET /api/health', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (logger.warn as jest.Mock) = jest.fn();
-    (logger.error as jest.Mock) = jest.fn();
+    (logger as any).warn = jest.fn();
+    (logger as any).error = jest.fn();
     (os.cpus as jest.Mock).mockReturnValue(Array(4).fill({}));
     (process.memoryUsage as jest.Mock).mockReturnValue({
       rss: 100 * 1024 * 1024,
