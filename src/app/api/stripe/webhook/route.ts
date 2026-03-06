@@ -1,5 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { fireBrevoEvent } from "@/lib/brevo";
+
+async function addPurchaserToList(email: string) {
+  const apiKey = process.env.BREVO_API_KEY;
+  const listIdRaw = process.env.BREVO_PURCHASERS_LIST_ID;
+  if (!apiKey || apiKey.startsWith("xkeysib-REPLACE") || !listIdRaw) return;
+  const listId = parseInt(listIdRaw, 10);
+  if (!listId) return;
+  try {
+    // Create/update contact and add to purchasers list
+    const createRes = await fetch("https://api.brevo.com/v3/contacts", {
+      method: "POST",
+      headers: {
+        "api-key": apiKey,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        email,
+        updateEnabled: true,
+        listIds: [listId],
+      }),
+    });
+    if (createRes.ok) return;
+    if (createRes.status === 409) {
+      // Contact exists — add to list
+      const addRes = await fetch(
+        `https://api.brevo.com/v3/contacts/lists/${listId}/contacts/add`,
+        {
+          method: "POST",
+          headers: {
+            "api-key": apiKey,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          body: JSON.stringify({ emails: [email] }),
+        }
+      );
+      if (!addRes.ok) console.warn("Brevo add to purchasers list:", addRes.status);
+    }
+  } catch {
+    // non-fatal
+  }
+}
 
 async function sendDownloadEmail(email: string, sessionId: string) {
   const brevoApiKey = process.env.BREVO_API_KEY;
@@ -99,9 +143,14 @@ export async function POST(request: NextRequest) {
       session.amount_total
     );
 
-    // Send download email via Brevo
     if (email) {
       await sendDownloadEmail(email, session.id);
+      await fireBrevoEvent(email, "purchase_completed", {
+        product: "hotkeys_guide",
+        amount: (session.amount_total ?? 0) / 100,
+        currency: session.currency ?? "usd",
+      });
+      await addPurchaserToList(email);
     }
   }
 

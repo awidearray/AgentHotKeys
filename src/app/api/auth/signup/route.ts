@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { supabaseAdmin, safeDbOperation } from '@/lib/supabase/client';
 import bcrypt from 'bcryptjs';
 import { authSchemas, validateRequest } from '@/lib/validation';
@@ -30,8 +30,8 @@ export async function POST(request: NextRequest) {
     });
     
     // Check for existing user
-    const existingUser = await safeDbOperation(() => 
-      supabaseAdmin
+    const existingUser = await safeDbOperation(async () => 
+      await supabaseAdmin
         .from('users')
         .select('id')
         .eq('email', data.email)
@@ -46,8 +46,8 @@ export async function POST(request: NextRequest) {
     const passwordHash = await bcrypt.hash(data.password, BCRYPT_ROUNDS);
     
     // Create user transaction
-    const userResult = await safeDbOperation(() => 
-      supabaseAdmin
+    const userResult = await safeDbOperation(async () => 
+      await supabaseAdmin
         .from('users')
         .insert({
           email: data.email,
@@ -64,12 +64,12 @@ export async function POST(request: NextRequest) {
       throw new Error('Failed to create user account');
     }
     
-    const user = userResult.data;
+    const user = userResult.data as any;
     
     // Create AI agent record if needed
     if (data.role === 'ai' && user.id) {
-      const agentResult = await safeDbOperation(() => 
-        supabaseAdmin
+      const agentResult = await safeDbOperation(async () => 
+        await supabaseAdmin
           .from('ai_agents')
           .insert({
             user_id: user.id,

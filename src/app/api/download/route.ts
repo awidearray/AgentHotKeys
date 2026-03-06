@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
+import { fireBrevoEvent } from "@/lib/brevo";
 
 export async function GET(request: NextRequest) {
   const sessionId = request.nextUrl.searchParams.get("session_id");
@@ -15,8 +16,9 @@ export async function GET(request: NextRequest) {
   }
 
   const stripe = new Stripe(stripeSecretKey);
+  let session: Stripe.Checkout.Session;
   try {
-    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    session = await stripe.checkout.sessions.retrieve(sessionId);
     if (session.payment_status !== "paid") {
       return NextResponse.json({ error: "Payment not verified" }, { status: 403 });
     }
@@ -34,6 +36,10 @@ export async function GET(request: NextRequest) {
   const { readFile } = await import("fs/promises");
   const { join } = await import("path");
   try {
+    const email = session.customer_details?.email;
+    if (email) {
+      fireBrevoEvent(email, "download_accessed").catch(() => {});
+    }
     const pdfPath = join(process.cwd(), "private", "Agentic_Command_Keys.pdf");
     const pdf = await readFile(pdfPath);
     return new NextResponse(pdf, {

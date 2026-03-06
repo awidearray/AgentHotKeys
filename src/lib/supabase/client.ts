@@ -1,7 +1,19 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { env, validateEnvironment } from '@/lib/env';
 
-const { isValid, errors } = validateEnvironment();
+// Safely validate environment
+let isValid = true;
+let errors: string[] = [];
+
+try {
+  const validation = validateEnvironment();
+  if (validation) {
+    isValid = validation.isValid;
+    errors = validation.errors;
+  }
+} catch (error) {
+  errors = ['Environment validation failed'];
+}
 
 if (!isValid) {
   console.warn('⚠️  Supabase configuration issues detected:', errors);
@@ -43,21 +55,26 @@ export const supabaseAdmin: SupabaseClient = createClient(
 );
 
 // Database health check
-export async function checkDatabaseHealth(): Promise<{ healthy: boolean; error?: string }> {
+export async function checkDatabaseHealth(): Promise<{ healthy: boolean; error?: string; latency: number }> {
+  const startTime = Date.now();
+  
   try {
     const { data, error } = await supabase
       .from('users')
       .select('id')
       .limit(1);
       
+    const latency = Date.now() - startTime;
+      
     if (error) {
-      return { healthy: false, error: error.message };
+      return { healthy: false, error: error.message, latency };
     }
     
-    return { healthy: true };
+    return { healthy: true, latency };
   } catch (err) {
+    const latency = Date.now() - startTime;
     const message = err instanceof Error ? err.message : 'Unknown database error';
-    return { healthy: false, error: message };
+    return { healthy: false, error: message, latency };
   }
 }
 

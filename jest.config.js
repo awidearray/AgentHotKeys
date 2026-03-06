@@ -26,8 +26,16 @@ const customJestConfig = {
     },
   },
   transformIgnorePatterns: [
-    'node_modules/(?!(@exodus/bytes|html-encoding-sniffer)/)',
+    'node_modules/(?!(@exodus/bytes|html-encoding-sniffer|@supabase/supabase-js|isomorphic-dompurify|entities|@bcoe)/)',
   ],
+  testEnvironmentOptions: {
+    customExportConditions: [''],
+  },
+  globals: {
+    Request: global.Request || class MockRequest {},
+    Response: global.Response || class MockResponse {},
+    Headers: global.Headers || class MockHeaders {},
+  },
 }
 
 module.exports = createJestConfig(customJestConfig)

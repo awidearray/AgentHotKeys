@@ -128,7 +128,7 @@ export async function validateRequest<T>(
     return sanitizeObject(validated as Record<string, any>) as T;
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const errors = error.errors.map(e => `${e.path.join('.')}: ${e.message}`);
+      const errors = error.issues.map(e => `${e.path.join('.')}: ${e.message}`);
       throw new Error(`Validation failed: ${errors.join(', ')}`);
     }
     throw error;

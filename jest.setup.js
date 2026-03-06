@@ -6,13 +6,24 @@ global.TextEncoder = TextEncoder
 global.TextDecoder = TextDecoder
 global.fetch = jest.fn()
 
-// Mock NextResponse
-global.NextResponse = {
-  json: jest.fn((body, init) => ({
-    status: init?.status || 200,
-    json: async () => body,
-  })),
+// Mock NextResponse - create a proper mock response that works with tests
+class MockNextResponse {
+  constructor(body, init = {}) {
+    this.body = body;
+    this.status = init.status || 200;
+    this._init = init;
+  }
+  
+  async json() {
+    return typeof this.body === 'string' ? JSON.parse(this.body) : this.body;
+  }
+  
+  static json(body, init) {
+    return new MockNextResponse(JSON.stringify(body), init);
+  }
 }
+
+global.NextResponse = MockNextResponse;
 
 // Set test environment variables
 process.env = {
@@ -48,3 +59,55 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: jest.fn(),
   })),
 })
+
+// Mock Web Request/Response APIs for server components
+global.Request = global.Request || class MockRequest {
+  constructor(url, options = {}) {
+    this.url = url;
+    this.method = options.method || 'GET';
+    this.headers = new Map(Object.entries(options.headers || {}));
+    this.body = options.body;
+  }
+  
+  json() {
+    return Promise.resolve(this.body ? JSON.parse(this.body) : {});
+  }
+  
+  text() {
+    return Promise.resolve(this.body || '');
+  }
+};
+
+global.Response = global.Response || class MockResponse {
+  constructor(body, options = {}) {
+    this.body = body;
+    this.status = options.status || 200;
+    this.ok = this.status >= 200 && this.status < 300;
+  }
+  
+  json() {
+    return Promise.resolve(typeof this.body === 'string' ? JSON.parse(this.body) : this.body);
+  }
+  
+  text() {
+    return Promise.resolve(this.body);
+  }
+};
+
+global.Headers = global.Headers || class MockHeaders {
+  constructor(init = {}) {
+    this.map = new Map(Object.entries(init));
+  }
+  
+  get(name) {
+    return this.map.get(name.toLowerCase());
+  }
+  
+  set(name, value) {
+    this.map.set(name.toLowerCase(), value);
+  }
+  
+  has(name) {
+    return this.map.has(name.toLowerCase());
+  }
+};

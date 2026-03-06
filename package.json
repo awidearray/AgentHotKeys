@@ -10,12 +10,14 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
+    "brevo:setup": "npx tsx scripts/brevo-setup.ts",
+    "brevo:blueprint": "npx tsx scripts/brevo-automations-blueprint.ts",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy": "opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {
-    "@rainbow-me/rainbowkit": "^2.2.10",
+    "@rainbow-me/rainbowkit": "^2.2.5",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/supabase-js": "^2.98.0",
     "@t3-oss/env-nextjs": "^0.13.10",
@@ -39,9 +41,12 @@
     "react-dom": "^19.0.0",
     "stripe": "^17.0.0",
     "viem": "^2.47.0",
-    "wagmi": "^3.5.0",
+    "wagmi": "^2.19.5",
     "winston": "^3.19.0",
     "zod": "^4.3.6"
+  },
+  "overrides": {
+    "wagmi": "^2.19.5"
   },
   "devDependencies": {
     "@opennextjs/cloudflare": "^1.0.0",

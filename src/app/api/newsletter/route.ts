@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { fireBrevoEvent } from "@/lib/brevo";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -65,6 +66,7 @@ export async function POST(request: NextRequest) {
     const createBody = await createRes.text();
 
     if (createRes.ok) {
+      await fireBrevoEvent(email, "newsletter_signup");
       return NextResponse.json({ success: true });
     }
 
@@ -73,6 +75,7 @@ export async function POST(request: NextRequest) {
       if (listId && listId > 0) {
         const addRes = await addContactToList(brevoApiKey, listId, email);
         if (addRes.ok) {
+          await fireBrevoEvent(email, "newsletter_signup");
           return NextResponse.json({ success: true });
         }
         console.error(
@@ -82,6 +85,7 @@ export async function POST(request: NextRequest) {
         );
       } else {
         // Contact exists, no list — treat as success
+        await fireBrevoEvent(email, "newsletter_signup");
         return NextResponse.json({ success: true });
       }
     } else {
