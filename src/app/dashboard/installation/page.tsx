@@ -1,7 +1,7 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
-import { useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabase/client';
 import Link from 'next/link';
@@ -100,7 +100,7 @@ const editors: Editor[] = [
   }
 ];
 
-export default function InstallationHubPage() {
+function InstallationHubContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -348,5 +348,13 @@ export default function InstallationHubPage() {
         </div>
       </div>
     </main>
+  );
+}
+
+export default function InstallationHubPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+      <InstallationHubContent />
+    </Suspense>
   );
 }
