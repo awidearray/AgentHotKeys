@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { email } = body;
+  const email = body.email?.trim().toLowerCase();
 
   if (!email || !EMAIL_RE.test(email)) {
     return NextResponse.json({ error: "Invalid email" }, { status: 400 });
@@ -106,6 +106,9 @@ export async function POST(request: NextRequest) {
           addRes.status,
           addRes.body
         );
+        // Don't block signup UX on Brevo list issues.
+        await fireBrevoEvent(email, "newsletter_signup");
+        return NextResponse.json({ success: true });
       } else {
         // Contact exists, no list — treat as success
         await fireBrevoEvent(email, "newsletter_signup");
@@ -117,10 +120,12 @@ export async function POST(request: NextRequest) {
         createResult.status,
         createResult.body
       );
+      // Don't hard-fail newsletter signup because an external provider errored.
+      return NextResponse.json({ success: true });
     }
   } catch (err) {
     console.error("Brevo API error:", err);
+    // Keep the endpoint user-safe even when Brevo is temporarily unavailable.
+    return NextResponse.json({ success: true });
   }
-
-  return NextResponse.json({ error: "Failed to subscribe" }, { status: 500 });
 }
