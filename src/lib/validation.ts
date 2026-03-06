@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import DOMPurify from 'isomorphic-dompurify';
+import sanitizeHtml from 'sanitize-html';
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 const walletAddressRegex = /^0x[a-fA-F0-9]{40}$/;
@@ -94,12 +94,11 @@ export const paymentSchemas = {
 };
 
 export function sanitizeInput(input: string): string {
-  const cleaned = DOMPurify.sanitize(input, { 
-    USE_PROFILES: { html: false },
-    ALLOWED_TAGS: [],
-    ALLOWED_ATTR: [],
+  const cleaned = sanitizeHtml(input, {
+    allowedTags: [],
+    allowedAttributes: {},
   });
-  
+
   return cleaned.trim();
 }
 
