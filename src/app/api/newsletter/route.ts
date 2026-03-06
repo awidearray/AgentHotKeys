@@ -24,6 +24,29 @@ async function addContactToList(
   return { ok: res.ok, status: res.status, body };
 }
 
+async function createOrUpdateContact(
+  brevoApiKey: string,
+  email: string,
+  listId?: number
+): Promise<{ ok: boolean; status: number; body: string }> {
+  const res = await fetch("https://api.brevo.com/v3/contacts", {
+    method: "POST",
+    headers: {
+      "api-key": brevoApiKey,
+      "Content-Type": "application/json",
+      Accept: "application/json",
+    },
+    body: JSON.stringify({
+      email,
+      updateEnabled: true,
+      ...(listId && listId > 0 ? { listIds: [listId] } : {}),
+    }),
+  });
+
+  const body = await res.text();
+  return { ok: res.ok, status: res.status, body };
+}
+
 export async function POST(request: NextRequest) {
   let body: { email?: string };
   try {
@@ -48,30 +71,30 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // 1. Create or update contact
-    const createRes = await fetch("https://api.brevo.com/v3/contacts", {
-      method: "POST",
-      headers: {
-        "api-key": brevoApiKey,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({
-        email,
-        updateEnabled: true,
-        ...(listId && listId > 0 ? { listIds: [listId] } : {}),
-      }),
-    });
+    // 1. Create/update contact, optionally with list assignment.
+    // If list assignment fails (bad list id/config), retry without list so signup can still succeed.
+    let createResult = await createOrUpdateContact(
+      brevoApiKey,
+      email,
+      listId ?? undefined
+    );
 
-    const createBody = await createRes.text();
+    if (!createResult.ok && listId && listId > 0) {
+      console.warn(
+        "Brevo create with list failed, retrying without list:",
+        createResult.status,
+        createResult.body
+      );
+      createResult = await createOrUpdateContact(brevoApiKey, email);
+    }
 
-    if (createRes.ok) {
+    if (createResult.ok) {
       await fireBrevoEvent(email, "newsletter_signup");
       return NextResponse.json({ success: true });
     }
 
     // 2. 409 = contact already exists — add to list if we have one, else still success
-    if (createRes.status === 409) {
+    if (createResult.status === 409) {
       if (listId && listId > 0) {
         const addRes = await addContactToList(brevoApiKey, listId, email);
         if (addRes.ok) {
@@ -91,8 +114,8 @@ export async function POST(request: NextRequest) {
     } else {
       console.error(
         "Brevo create contact error:",
-        createRes.status,
-        createBody
+        createResult.status,
+        createResult.body
       );
     }
   } catch (err) {
