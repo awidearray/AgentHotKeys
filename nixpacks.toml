@@ -3,7 +3,7 @@ NODE_ENV = "production"
 
 [phases.build]
 cmds = [
-  "npm ci",
+  "npm cache clean --force",
   "npm run build"
 ]
 
@@ -13,4 +13,4 @@ cmd = "npm start"
 providers = ["node"]
 
 [node]
-version = "18"
+version = "22"
