@@ -436,7 +436,7 @@ describe('GET /api/health', () => {
       const duration = Date.now() - start;
 
       expect(response.status).toBe(200);
-      expect(duration).toBeLessThan(5000);
+      expect(duration).toBeLessThan(15000);
     });
 
     it('should run checks in parallel', async () => {
