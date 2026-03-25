@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import sanitizeHtml from 'sanitize-html';
+import { ValidationError } from './errors';
 
 const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 const walletAddressRegex = /^0x[a-fA-F0-9]{40}$/;
@@ -118,17 +119,35 @@ export function sanitizeObject<T extends Record<string, any>>(obj: T): T {
   return sanitized;
 }
 
+function normalizeObject<T>(value: T): T {
+  if (typeof value === 'string') {
+    return value.trim() as T;
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => normalizeObject(item)) as T;
+  }
+  if (value && typeof value === 'object') {
+    const normalizedEntries = Object.entries(value as Record<string, unknown>).map(([key, entry]) => [
+      key,
+      normalizeObject(entry),
+    ]);
+    return Object.fromEntries(normalizedEntries) as T;
+  }
+  return value;
+}
+
 export async function validateRequest<T>(
   schema: z.ZodSchema<T>,
   data: unknown
 ): Promise<T> {
   try {
-    const validated = await schema.parseAsync(data);
+    const normalized = normalizeObject(data);
+    const validated = await schema.parseAsync(normalized);
     return sanitizeObject(validated as Record<string, any>) as T;
   } catch (error) {
     if (error instanceof z.ZodError) {
       const errors = error.issues.map(e => `${e.path.join('.')}: ${e.message}`);
-      throw new Error(`Validation failed: ${errors.join(', ')}`);
+      throw new ValidationError(`Validation failed: ${errors.join(', ')}`, error.issues);
     }
     throw error;
   }

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { createRateLimiter, rateLimiters } from '@/lib/rate-limit';
+import { createRateLimiter, rateLimiters, resetRateLimitStores } from '@/lib/rate-limit';
 import { RateLimitError } from '@/lib/errors';
 
 describe('Rate Limiting', () => {
@@ -11,6 +11,7 @@ describe('Rate Limiting', () => {
   beforeEach(() => {
     // Clear rate limit stores
     jest.clearAllMocks();
+    resetRateLimitStores();
     jest.useFakeTimers();
   });
 

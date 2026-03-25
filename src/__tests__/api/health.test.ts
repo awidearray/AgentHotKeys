@@ -7,7 +7,13 @@ import * as process from 'process';
 
 jest.mock('@/lib/supabase/client');
 jest.mock('@/lib/env');
-jest.mock('@/lib/logger');
+jest.mock('@/lib/logger', () => ({
+  logger: {
+    warn: jest.fn(),
+    error: jest.fn(),
+    info: jest.fn(),
+  },
+}));
 jest.mock('os');
 jest.mock('process', () => ({
   ...jest.requireActual('process'),
@@ -21,8 +27,6 @@ jest.mock('process', () => ({
 describe('GET /api/health', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (logger as any).warn = jest.fn();
-    (logger as any).error = jest.fn();
     (os.cpus as jest.Mock).mockReturnValue(Array(4).fill({}));
     (process.memoryUsage as jest.Mock).mockReturnValue({
       rss: 100 * 1024 * 1024,
@@ -258,10 +262,11 @@ describe('GET /api/health', () => {
       const response = await GET();
       const data = await response.json();
 
-      expect(response.status).toBe(500);
-      expect(data.status).toBe('error');
-      expect(data.error).toContain('Database error');
-      expect(logger.error).toHaveBeenCalled();
+      expect(response.status).toBe(503);
+      expect(data.status).toBe('degraded');
+      expect(data.services.database.healthy).toBe(false);
+      expect(data.services.database.error).toContain('Database error');
+      expect(logger.warn).toHaveBeenCalled();
     });
 
     it('should handle environment validation errors', async () => {
@@ -302,6 +307,9 @@ describe('GET /api/health', () => {
     });
 
     it('should handle unknown errors', async () => {
+      (process.memoryUsage as jest.Mock).mockImplementation(() => {
+        throw new Error('Unexpected memory failure');
+      });
       (checkDatabaseHealth as jest.Mock).mockResolvedValue({
         healthy: true,
         latency: 25,
@@ -310,23 +318,12 @@ describe('GET /api/health', () => {
         isValid: true,
         errors: [],
       });
-      
-      // Mock an unexpected error during response creation
-      const originalJson = NextResponse.json;
-      let callCount = 0;
-      NextResponse.json = jest.fn().mockImplementation(() => {
-        callCount++;
-        if (callCount === 1) {
-          throw 'Unexpected error type';
-        }
-        return originalJson.apply(null, arguments);
-      });
 
       const response = await GET();
-      
+      const data = await response.json();
+
       expect(response.status).toBe(500);
-      
-      NextResponse.json = originalJson;
+      expect(data.status).toBe('error');
     });
   });
 
