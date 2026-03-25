@@ -60,54 +60,14 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 })
 
-// Mock Web Request/Response APIs for server components
-global.Request = global.Request || class MockRequest {
-  constructor(url, options = {}) {
-    this.url = url;
-    this.method = options.method || 'GET';
-    this.headers = new Map(Object.entries(options.headers || {}));
-    this.body = options.body;
-  }
-  
-  json() {
-    return Promise.resolve(this.body ? JSON.parse(this.body) : {});
-  }
-  
-  text() {
-    return Promise.resolve(this.body || '');
-  }
-};
-
-global.Response = global.Response || class MockResponse {
-  constructor(body, options = {}) {
-    this.body = body;
-    this.status = options.status || 200;
-    this.ok = this.status >= 200 && this.status < 300;
-  }
-  
-  json() {
-    return Promise.resolve(typeof this.body === 'string' ? JSON.parse(this.body) : this.body);
-  }
-  
-  text() {
-    return Promise.resolve(this.body);
-  }
-};
-
-global.Headers = global.Headers || class MockHeaders {
-  constructor(init = {}) {
-    this.map = new Map(Object.entries(init));
-  }
-  
-  get(name) {
-    return this.map.get(name.toLowerCase());
-  }
-  
-  set(name, value) {
-    this.map.set(name.toLowerCase(), value);
-  }
-  
-  has(name) {
-    return this.map.has(name.toLowerCase());
-  }
-};
+// Node 20 may not expose Response.json static helper used by NextResponse.
+if (typeof global.Response !== 'undefined' && typeof global.Response.json !== 'function') {
+  global.Response.json = (body, init = {}) =>
+    new global.Response(JSON.stringify(body), {
+      ...init,
+      headers: {
+        'content-type': 'application/json',
+        ...(init.headers || {}),
+      },
+    });
+}
