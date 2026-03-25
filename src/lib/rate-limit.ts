@@ -11,6 +11,10 @@ interface RateLimitStore {
 
 const stores: Map<string, RateLimitStore> = new Map();
 
+export function resetRateLimitStores(): void {
+  stores.clear();
+}
+
 export interface RateLimitOptions {
   windowMs?: number;
   max?: number;
@@ -42,12 +46,16 @@ export function createRateLimiter(options: RateLimitOptions = {}) {
   if (!stores.has(storeName)) {
     stores.set(storeName, {});
   }
-  
-  const store = stores.get(storeName)!;
-  
+
   return async function rateLimiter(req: NextRequest): Promise<void> {
     if (config.skip(req)) {
       return;
+    }
+
+    let store = stores.get(storeName);
+    if (!store) {
+      store = {};
+      stores.set(storeName, store);
     }
     
     const key = config.keyGenerator(req);

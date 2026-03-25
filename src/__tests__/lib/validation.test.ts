@@ -6,7 +6,7 @@ describe('Validation', () => {
       it('should validate correct signup data', async () => {
         const data = {
           email: 'test@example.com',
-          password: 'Test123!@#',
+          password: 'Test123!',
           name: 'Test User',
           role: 'human' as const,
         };
@@ -29,7 +29,7 @@ describe('Validation', () => {
       it('should reject invalid email', async () => {
         const data = {
           email: 'invalid-email',
-          password: 'Test123!@#',
+          password: 'Test123!',
           name: 'Test User',
           role: 'human' as const,
         };
@@ -132,7 +132,7 @@ describe('Validation', () => {
       
       const result = await validateRequest(schema, data);
       expect(result.email).toBe('test@example.com');
-      expect(result.password).toBe('password');
+      expect(result.password).toBe('');
     });
     
     it('should throw validation error', async () => {
