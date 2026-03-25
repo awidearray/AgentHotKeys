@@ -5,6 +5,7 @@ const createJestConfig = nextJest({
 })
 
 const customJestConfig = {
+  setupFiles: ['<rootDir>/jest.polyfills.js'],
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
@@ -25,11 +26,6 @@ const customJestConfig = {
     customExportConditions: [''],
   },
   modulePathIgnorePatterns: ['<rootDir>/.next/'],
-  globals: {
-    Request: global.Request || class MockRequest {},
-    Response: global.Response || class MockResponse {},
-    Headers: global.Headers || class MockHeaders {},
-  },
 }
 
 module.exports = createJestConfig(customJestConfig)
