@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { fireBrevoEvent } from "@/lib/brevo";
+import { isHotkeysSession } from "@/lib/stripe-ownership";
 
 export async function GET(request: NextRequest) {
   const sessionId = request.nextUrl.searchParams.get("session_id");
@@ -19,7 +20,12 @@ export async function GET(request: NextRequest) {
   let session: Stripe.Checkout.Session;
   try {
     session = await stripe.checkout.sessions.retrieve(sessionId);
-    if (session.payment_status !== "paid") {
+    // Paid AND ours: on the shared Stripe account another product's paid
+    // session must not serve our PDF. Same response either way — no hint why.
+    if (
+      session.payment_status !== "paid" ||
+      !(await isHotkeysSession(session, stripe))
+    ) {
       return NextResponse.json({ error: "Payment not verified" }, { status: 403 });
     }
   } catch {

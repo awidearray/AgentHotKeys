@@ -27,12 +27,19 @@ export default async function SuccessPage({
 
   const Stripe = (await import("stripe")).default;
   const stripe = new Stripe(stripeSecretKey);
+  let verified = false;
   try {
     const session = await stripe.checkout.sessions.retrieve(session_id);
-    if (session.payment_status !== "paid") {
-      redirect("/");
+    if (session.payment_status === "paid") {
+      // Shared Stripe account: a paid session from another product must not
+      // unlock this one. Same exit as unpaid — no hint why.
+      const { isHotkeysSession } = await import("@/lib/stripe-ownership");
+      verified = await isHotkeysSession(session, stripe);
     }
   } catch {
+    verified = false;
+  }
+  if (!verified) {
     redirect("/");
   }
 

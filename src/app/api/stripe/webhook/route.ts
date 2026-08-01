@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { fireBrevoEvent } from "@/lib/brevo";
+import { isHotkeysSession } from "@/lib/stripe-ownership";
 
 async function addPurchaserToList(email: string) {
   const apiKey = process.env.BREVO_API_KEY;
@@ -132,6 +133,18 @@ export async function POST(request: NextRequest) {
 
   if (event.type === "checkout.session.completed") {
     const session = event.data.object as Stripe.Checkout.Session;
+
+    // Shared Stripe account: this event fires for every product's sales.
+    // A session that isn't ours must not trigger emails, Brevo writes, or
+    // list additions — and must still 200 so Stripe doesn't retry.
+    if (!(await isHotkeysSession(session, stripe))) {
+      console.log(
+        "Ignoring non-HotKeys checkout on shared Stripe account:",
+        session.id
+      );
+      return NextResponse.json({ received: true, ignored: "not_hotkeys" });
+    }
+
     const email = session.customer_details?.email;
 
     console.log(
