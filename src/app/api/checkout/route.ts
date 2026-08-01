@@ -28,6 +28,9 @@ export async function POST() {
       ],
       success_url: `${origin}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/#pricing`,
+      // Ownership marker: the shared Stripe account fans events out to every
+      // product's webhook, so ours must be identifiable.
+      metadata: { product: "hotkeys_guide" },
     });
 
     return NextResponse.json({ url: session.url });
